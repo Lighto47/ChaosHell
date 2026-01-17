@@ -1,0 +1,3909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ngai Suy Vong: Trận Chiến Của Các Vị Thần - Touhou Edition</title>
+    <link rel="stylesheet" href="styles/enhanced-vfx.css">
+    <style>
+        /* === GLOBAL STYLES === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* === MOBILE CONTROLS === */
+        #mobile-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            pointer-events: none;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            pointer-events: auto;
+        }
+        
+        .touch-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            touch-action: manipulation;
+            user-select: none;
+            transition: all 0.1s;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .touch-btn:active {
+            background: rgba(0, 150, 255, 0.8);
+            transform: scale(0.95);
+            border-color: #00ffff;
+            box-shadow: 0 0 25px #00ffff;
+        }
+        
+        .touch-btn.bomb {
+            border-color: rgba(255, 100, 0, 0.6);
+            box-shadow: 0 0 15px rgba(255, 100, 0, 0.4);
+        }
+        
+        .touch-btn.bomb:active {
+            background: rgba(255, 100, 0, 0.9);
+            border-color: #ff6600;
+            box-shadow: 0 0 30px #ff6600;
+        }
+        
+        .btn-label {
+            position: absolute;
+            bottom: -20px;
+            font-size: 10px;
+            color: #aaa;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .move-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 150px);
+            pointer-events: auto;
+            z-index: 40;
+            -webkit-user-drag: none;
+        }
+        
+        /* === MOBILE HUD === */
+        #mobile-hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            z-index: 60;
+        }
+        
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 150, 255, 0.5);
+        }
+        
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .hud-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .life-icon {
+            color: #ff4444;
+            font-size: 18px;
+        }
+        
+        .bomb-icon {
+            color: #ffaa00;
+            font-size: 16px;
+        }
+        
+        .power-icon {
+            color: #00ff00;
+            font-size: 16px;
+        }
+        
+        .graze-icon {
+            color: #00ffff;
+            font-size: 16px;
+        }
+        
+        /* === SPELL CARD UI - MOBILE FRIENDLY === */
+        .spell-container {
+            position: absolute;
+            top: 80px;
+            left: 10px;
+            right: 10px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 50;
+            background: rgba(0, 20, 0, 0.8);
+            border-radius: 10px;
+            padding: 8px;
+            border: 1px solid #00aa00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+        
+        .spell-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffcc00;
+            text-shadow: 0 0 10px #ff9900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .spell-timer {
+            font-size: 12px;
+            color: #00ffff;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .bar-frame {
+            width: 100%;
+            height: 16px;
+            background: #002200;
+            border: 2px solid #00aa00;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00cc00, #00ff44);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        
+        .hp-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            z-index: 2;
+        }
+        
+        .spell-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #ffff00;
+            width: 100%;
+            z-index: 3;
+            transition: width 0.1s;
+        }
+        
+        .stack-badge {
+            position: absolute;
+            top: -8px;
+            right: -5px;
+            background: #008800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            border: 1px solid #55ff55;
+        }
+        
+        #spell-status {
+            font-size: 12px;
+            color: #ffaa00;
+            font-weight: bold;
+            height: 16px;
+            text-shadow: 0 0 5px black;
+            margin-top: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* === SCORE DISPLAY === */
+        .score-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            text-align: right;
+            pointer-events: none;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 0, 0.5);
+        }
+        
+        .score-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffff00;
+            text-shadow: 1px 1px 0 #000;
+            line-height: 1;
+        }
+        
+        .combo-value {
+            font-size: 14px;
+            color: #ff9900;
+            margin-top: 2px;
+        }
+        
+        /* === DEATHBOMB INDICATOR === */
+        .deathbomb-indicator {
+            position: absolute;
+            bottom: 160px;
+            width: 100%;
+            text-align: center;
+            color: #ffaa00;
+            font-weight: 900;
+            font-size: 20px;
+            text-shadow: 0 0 20px #ffaa00;
+            display: none;
+            animation: pulse 0.5s infinite alternate;
+            pointer-events: none;
+            z-index: 70;
+        }
+        
+        /* === START/END SCREENS === */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2em;
+            color: #ff3333;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 15px red;
+            line-height: 1.2;
+        }
+        
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 1em;
+            line-height: 1.5;
+            max-width: 100%;
+        }
+        
+        .mobile-instructions {
+            background: rgba(0, 50, 100, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #0088ff;
+            font-size: 0.9em;
+        }
+        
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            text-align: left;
+        }
+        
+        .btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        
+        .btn:hover, .btn:active {
+            background: #00ffff;
+            color: black;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        /* === HIT EFFECT === */
+        .hit-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: rgba(255, 0, 0, 0.3);
+            z-index: 30;
+            display: none;
+        }
+        
+        /* === PERFORMANCE WARNING === */
+        .performance-warning {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 10px;
+            color: #ff6666;
+            opacity: 0.7;
+            pointer-events: none;
+            z-index: 80;
+        }
+        
+        /* === ANIMATIONS === */
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.8; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+        
+        @keyframes invulFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        @keyframes bombReady {
+            0%, 100% { box-shadow: 0 0 10px #ffaa00; }
+            50% { box-shadow: 0 0 25px #ffaa00; }
+        }
+        
+        /* === TOUCH FEEDBACK === */
+        .touch-feedback {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 150, 255, 0.3);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            pointer-events: none;
+            z-index: 45;
+            transform: translate(-50%, -50%);
+            animation: touchPulse 0.3s forwards;
+        }
+        
+        @keyframes touchPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+        
+        /* === AUTO BOMB INDICATOR === */
+        .auto-bomb-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffaa00;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ffaa00;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 55;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- TOUCH FEEDBACK -->
+    <div id="touch-feedback"></div>
+    
+    <!-- HIT EFFECT -->
+    <div class="hit-effect" id="hit-effect"></div>
+    
+    <!-- MOBILE HUD -->
+    <div id="mobile-hud">
+        <div class="hud-row">
+            <div class="hud-item">
+                <div class="hud-icon life-icon">♥</div>
+                <span id="life-value">3</span>
+            </div>
+            <div class="hud-item">
+                <div class="hud-icon bomb-icon">💣</div>
+                <span id="bomb-value">2</span>
+            </div>
+            <div class="hud-item">
+                <div class="hud-icon power-icon">⚡</div>
+                <span id="power-value">1.00</span>
+            </div>
+            <div class="hud-item">
+                <div class="hud-icon graze-icon">✨</div>
+                <span id="graze-value">0</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCORE DISPLAY -->
+    <div class="score-display">
+        <div class="score-value" id="score-value">0</div>
+        <div class="combo-value" id="combo-value">Combo: 0</div>
+    </div>
+    
+    <!-- SPELL CARD UI -->
+    <div class="spell-container">
+        <div class="spell-name" id="spell-name">[Spell Card Name]</div>
+        <div class="spell-timer" id="spell-timer">Time: 0.00</div>
+        <div class="bar-frame">
+            <div class="hp-fill" id="spell-hp-bar"></div>
+            <div class="hp-text"><span id="spell-hp-val">0</span> / <span id="spell-hp-max">0</span></div>
+            <div class="stack-badge" id="spell-stack">No.</div>
+            <div class="spell-indicator" id="spell-indicator"></div>
+        </div>
+        <div id="spell-status"></div>
+    </div>
+    
+    <!-- DEATHBOMB INDICATOR -->
+    <div class="deathbomb-indicator" id="deathbomb-text">DEATHBOMB!</div>
+    
+    <!-- AUTO BOMB INDICATOR -->
+    <div class="auto-bomb-indicator" id="auto-bomb-indicator">AUTO-BOMB!</div>
+    
+    <!-- MOVE AREA -->
+    <div class="move-area" id="move-area"></div>
+    
+    <!-- MOBILE CONTROLS -->
+    <div id="mobile-controls">
+        <div class="control-row">
+            <div class="touch-btn" id="btn-focus">
+                <span>FOCUS</span>
+                <div class="btn-label">SLOW</div>
+            </div>
+            <div class="touch-btn bomb" id="btn-bomb">
+                <span>BOMB</span>
+                <div class="btn-label">CLEAR</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- START SCREEN -->
+    <div id="overlay">
+        <h1>TOUHOU DANMAKU<br>SIMULATOR</h1>
+        <div class="subtitle">
+            <b>Chế độ di động tối ưu</b><br>
+            Điều khiển bằng cảm ứng trực tiếp<br>
+            <span style="font-size: 0.9em; color: #888;">v1.3 Enhanced Edition</span>
+        </div>
+        
+        <div class="mobile-instructions">
+            <div class="instruction-item">
+                <span style="color:#00ffff">✓</span>
+                <span><b>Di chuyển:</b> Chạm và di trên màn hình</span>
+            </div>
+            <div class="instruction-item">
+                <span style="color:#00ffff">✓</span>
+                <span><b>Focus (Slow):</b> Nút FOCUS hoặc chạm 2 ngón tay</span>
+            </div>
+            <div class="instruction-item">
+                <span style="color:#00ffff">✓</span>
+                <span><b>Bomb:</b> Nút BOMB hoặc lắc điện thoại</span>
+            </div>
+            <div class="instruction-item">
+                <span style="color:#00ffff">✓</span>
+                <span><b>Deathbomb:</b> Bomb trong 10 frame khi bị trúng để thoát</span>
+            </div>
+            <div class="instruction-item">
+                <span style="color:#ff5555">⚠</span>
+                <span><b>Auto-bomb:</b> Tự động kích hoạt khi nguy hiểm</span>
+            </div>
+            <div class="instruction-item">
+                <span style="color:#00ffaa">⚡</span>
+                <span><b>Power:</b> Max 24.00 • Graze để tăng power nhanh</span>
+            </div>
+        </div>
+        
+        <button class="btn" onclick="startGame()">Bắt Đầu</button>
+        
+        <div style="margin-top: 20px; font-size: 0.8em; color: #888;">
+            <b>IMPROVEMENTS:</b> Better particle effects • Enhanced screen shake • Faster power progression
+        </div>
+    </div>
+
+    <!-- PERFORMANCE WARNING -->
+    <div class="performance-warning" id="performance-warning"></div>
+
+    <!-- ES6 Module Import -->
+    <script type="module">
+        import { startGame } from './modules/main.js';
+        
+        // Make startGame available globally for HTML onclick
+        window.startGame = startGame;
+    </script>
+        const CONFIG = {
+            // Colors
+            colors: {
+                boss: '#ff2222',
+                bossGlow: '#aa0000',
+                player: '#0021ffff',
+                playerFocus: '#0a134a',
+                bulletWhite: '#ffffff',
+                bulletRed: '#ff0044',
+                bulletBlue: '#0088ff',
+                bulletPurple: '#aa00ff',
+                bulletGreen: '#00ff00',
+                bulletYellow: '#ffff00'
+            },
+            
+            // Boss Stats (Enhanced)
+            boss: {
+                maxHpPerSpell: 260000,
+                totalSpells: 16,
+                spellDuration: 180 * 180,
+                phases: ['normal', 'red', 'blue', 'purple', 'yellow', 'gaster_only', 'rainbow', 'final']
+            },
+            
+            // Player Stats (Enhanced for mobile)
+            player: {
+                startLives: 24,
+                startBombs: 12, // Increased for mobile
+                moveSpeed: 6,
+                focusSpeed: 3.5,
+                invulTime: 240,
+                deathbombWindow: 24, // Slightly longer for mobile
+                
+                // Enhanced power system
+                powerMax: 24.00, // Increased from 4.00
+                powerStart: 1.00,
+                powerLossOnDeath: 1.25,
+                powerGainPerItem: 0.15, // Increased
+                powerGainPerGraze: 0.01,
+                
+                // Graze system
+                grazeDistance: 25,
+                
+                // Mobile-specific
+                hitboxScale: 0.09, // Smaller hitbox than sprite
+                autoBombThreshold: 0.50, // Auto-bomb when 15% chance to hit
+                shakeToBomb: true
+            },
+            
+            // Scoring (Enhanced)
+            scoring: {
+                grazePoints: 20,
+                spellBonusBase: 20000,
+                comboMultiplier: 150,
+                pointItemValue: 50,
+                powerBonusMultiplier: 1.5
+            },
+            
+            // Performance
+            performance: {
+                maxBullets: 20000,
+                maxParticles: 5000,
+                bulletPoolSize: 20000,
+                enableBulletPool: true,
+                maxItems: 15,
+                maxGasterBlasters: 10,
+                maxGasterDevourers: 3
+            },
+            
+            // Enhanced visual feedback
+            visual: {
+                particleIntensity: 1.2,
+                screenShakeMultiplier: 1.3,
+                hitFlashAlpha: 0.4,
+                comboTextScale: 1.5,
+                deathbombFlashIntensity: 0.6
+            },
+            
+            // Sound config (placeholder for future audio)
+            audio: {
+                enableSounds: false,
+                masterVolume: 0.7
+            }
+        };
+        
+        // === HYBRID TIMING CORE ===
+        const LOGIC_FPS = 60;
+        const FIXED_DT = 1000 / LOGIC_FPS;
+        let accumulator = 0;
+        let lastTime = 0;
+        let alpha = 0;
+        let fixedFrames = 0; // Frames logic đã chạy
+        
+        // === GAME VARIABLES ===
+        const CANVAS = document.getElementById('gameCanvas');
+        const CTX = CANVAS.getContext('2d', { alpha: false });
+        
+        let WIDTH, HEIGHT;
+        let GAME_RUNNING = false;
+        let SHAKE_INTENSITY = 0;
+        let IS_TOUCHING = false;
+        let TOUCH_POS = { x: 0, y: 0 };
+        let LAST_TOUCH_TIME = 0;
+        
+        // Scoring
+        let SCORE = 0;
+        let GRAZE_COUNT = 0;
+        let COMBO_COUNT = 0;
+        let COMBO_TIMER = 0;
+        let POINT_ITEMS = 0;
+        let SPELL_BONUS = 1.0;
+        
+        // Mobile controls
+        let FOCUS_ACTIVE = false;
+        let BOMB_COOLDOWN = 0;
+        let AUTO_BOMB_ACTIVE = false;
+        let MULTI_TOUCH = false;
+        
+        // Performance tracking
+        let LAST_FPS_UPDATE = 0;
+        let FPS = 60;
+        let BULLET_COUNT = 0;
+        let PARTICLE_COUNT = 0;
+        
+        // Game Entities
+        let player, boss;
+        let bullets = [];
+        let particles = [];
+        let items = [];
+        let blasters = [];
+        let gasterDevourers = [];
+        
+        // Bullet pool for performance
+        let bulletPool = [];
+        let itemPool = [];
+        let particlePool = [];
+        
+        // === ENHANCED PARTICLE EFFECTS SYSTEM ===
+        class ParticleEffect {
+            static createBurst(x, y, count = 12, color = '#ffaa00', speed = 3) {
+                for (let i = 0; i < count; i++) {
+                    const angle = (i / count) * Math.PI * 2;
+                    const particle = getParticleFromPool(x, y, color);
+                    particle.vel.set(
+                        Math.cos(angle) * speed,
+                        Math.sin(angle) * speed
+                    );
+                    particles.push(particle);
+                }
+            }
+            
+            static createWave(x, y, count = 8, color = '#0088ff', speed = 2) {
+                for (let i = 0; i < count; i++) {
+                    const angle = (i / count) * Math.PI * 2 + performance.now() * 0.005;
+                    const particle = getParticleFromPool(x, y, color);
+                    particle.vel.set(
+                        Math.cos(angle) * speed,
+                        Math.sin(angle) * speed
+                    );
+                    particles.push(particle);
+                }
+            }
+        }
+        
+        // === VECTOR CLASS (VỚI INTERPOLATION) ===
+        class Vector {
+            constructor(x, y) {
+                this.x = x || 0;
+                this.y = y || 0;
+                this.prevX = x || 0;
+                this.prevY = y || 0;
+            }
+            
+            set(x, y) {
+                this.prevX = this.x;
+                this.prevY = this.y;
+                this.x = x;
+                this.y = y;
+                return this;
+            }
+            
+            add(v) {
+                this.prevX = this.x;
+                this.prevY = this.y;
+                this.x += v.x;
+                this.y += v.y;
+                return this;
+            }
+            
+            sub(v) {
+                this.prevX = this.x;
+                this.prevY = this.y;
+                this.x -= v.x;
+                this.y -= v.y;
+                return this;
+            }
+            
+            mult(n) {
+                this.prevX = this.x;
+                this.prevY = this.y;
+                this.x *= n;
+                this.y *= n;
+                return this;
+            }
+            
+            mag() {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            }
+            
+            magSq() {
+                return this.x * this.x + this.y * this.y;
+            }
+            
+            normalize() {
+                const m = this.mag();
+                if (m !== 0) this.mult(1 / m);
+                return this;
+            }
+            
+            limit(max) {
+                if (this.mag() > max) {
+                    this.normalize();
+                    this.mult(max);
+                }
+                return this;
+            }
+            
+            dist(v) {
+                const dx = this.x - v.x;
+                const dy = this.y - v.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            distSq(v) {
+                const dx = this.x - v.x;
+                const dy = this.y - v.y;
+                return dx * dx + dy * dy;
+            }
+            
+            copy() {
+                return new Vector(this.x, this.y);
+            }
+            
+            // For interpolation
+            interpolated(alpha) {
+                return {
+                    x: this.prevX + (this.x - this.prevX) * alpha,
+                    y: this.prevY + (this.y - this.prevY) * alpha
+                };
+            }
+            
+            // Fixed update - save previous
+            fixedUpdate() {
+                this.prevX = this.x;
+                this.prevY = this.y;
+            }
+        }
+        
+        // === ENHANCED GASTER BLASTER CLASS (HYBRID) ===
+        class GasterBlaster {
+            constructor(x, y, targetX, targetY, options = {}) {
+                this.pos = new Vector(x, y);
+                this.targetPos = new Vector(targetX, targetY);
+                this.angle = Math.atan2(targetY - y, targetX - x) - Math.PI / 2;
+                this.prevAngle = this.angle;
+                this.scale = options.scale || 1.0;
+                this.duration = options.duration || 60;
+                this.trackOnEnter = options.trackOnEnter || false;
+                this.delayFire = options.delay || 40;
+                this.timer = 0;
+                this.state = 'enter';
+                this.beamWidth = 0;
+                this.maxBeamWidth = 35 * this.scale;
+                this.beamLength = 1000;
+                this.mouthOffset = 15;
+                this.glowIntensity = 0;
+                this.active = true;
+                this.lockedAngle = null;
+                
+                // Animation-only properties
+                this.visualAngle = this.angle;
+                this.visualBeamWidth = 0;
+            }
+            
+            fixedUpdate() {
+                this.timer++;
+                
+                // Save previous state for interpolation
+                this.prevAngle = this.visualAngle;
+                this.pos.fixedUpdate();
+                
+                // State machine FIXED 60FPS
+                switch(this.state) {
+                    case 'enter':
+                        this.fixedUpdateEnter();
+                        break;
+                    case 'charge':
+                        this.fixedUpdateCharge();
+                        break;
+                    case 'fire':
+                        this.fixedUpdateFire();
+                        break;
+                    case 'leave':
+                        if (!this.fixedUpdateLeave()) {
+                            return false;
+                        }
+                        break;
+                }
+                
+                // Update visual angle for interpolation
+                this.visualAngle = this.angle;
+                
+                return this.active;
+            }
+            
+            fixedUpdateEnter() {
+                // 🔄 ONLY for selected patterns - FIXED LOGIC
+                if (this.trackOnEnter && fixedFrames % 5 === 0) {
+                    const targetAngle =
+                        Math.atan2(
+                            player.pos.y - this.pos.y,
+                            player.pos.x - this.pos.x
+                        ) - Math.PI / 2;
+
+                    let diff = targetAngle - this.angle;
+                    while (diff > Math.PI) diff -= Math.PI * 2;
+                    while (diff < -Math.PI) diff += Math.PI * 2;
+
+                    this.angle += diff * 0.19; // xoay mượt, không gắt
+                }
+
+                const targetX =
+                    this.targetPos.x -
+                    Math.cos(this.angle + Math.PI / 2) * 80;
+                const targetY =
+                    this.targetPos.y -
+                    Math.sin(this.angle + Math.PI / 2) * 80;
+
+                this.pos.x += (targetX - this.pos.x) * 0.15;
+                this.pos.y += (targetY - this.pos.y) * 0.15;
+
+                if (this.timer > this.delayFire) {
+                    this.state = 'charge';
+                    this.timer = 0;
+                }
+            }
+            
+            fixedUpdateCharge() {
+                // Subtle vibration - FIXED LOGIC
+                if (this.timer % 3 === 0) {
+                    this.pos.x += (Math.random() - 0.5) * 3;
+                    this.pos.y += (Math.random() - 0.5) * 3;
+                }
+                
+                if (this.timer > 12) {
+                    this.state = 'fire';
+                    this.timer = 0;
+                    SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 6 * this.scale);
+                }
+            }
+            
+            fixedUpdateFire() {
+                if (this.timer < 8) {
+                    this.beamWidth = this.maxBeamWidth * (this.timer / 8);
+                }
+                
+                // Check collision with player - FIXED LOGIC
+                this.checkCollision();
+                
+                if (this.timer > this.duration) {
+                    this.state = 'leave';
+                    this.timer = 0;
+                }
+            }
+            
+            fixedUpdateLeave() {
+                this.beamWidth *= 0.85;
+                this.pos.x -= Math.cos(this.angle + Math.PI / 2) * 12;
+                this.pos.y -= Math.sin(this.angle + Math.PI / 2) * 12;
+                if (this.timer > 25) {
+                    this.active = false;
+                }
+                return this.active;
+            }
+            
+            checkCollision() {
+                if (!player || player.invulFrames > 0) return false;
+                
+                const mouthX = this.pos.x + Math.cos(this.angle + Math.PI / 2) * this.mouthOffset;
+                const mouthY = this.pos.y + Math.sin(this.angle + Math.PI / 2) * this.mouthOffset;
+                const dx = player.pos.x - mouthX;
+                const dy = player.pos.y - mouthY;
+                const rot = -(this.angle + Math.PI / 2);
+                const cos = Math.cos(rot);
+                const sin = Math.sin(rot);
+                const localX = dx * cos - dy * sin;
+                const localY = dx * sin + dy * cos;
+                const halfWidth = this.beamWidth * 0.5;
+                const hitboxRadius = player.hitboxRadius;
+                
+                // Optimized collision check - FIXED LOGIC
+                if (localY >= 15 && localY <= this.beamLength) {
+                    const xDist = Math.abs(localX);
+                    if (xDist <= halfWidth + hitboxRadius) {
+                        // Check if actually inside beam
+                        if (xDist <= halfWidth || 
+                            (xDist - halfWidth) * (xDist - halfWidth) <= hitboxRadius * hitboxRadius) {
+                            player.onHit();
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            draw(alpha) {
+                CTX.save();
+                
+                // Interpolated position and angle
+                const interpPos = this.pos.interpolated(alpha);
+                const interpAngle = this.prevAngle + (this.visualAngle - this.prevAngle) * alpha;
+                const interpBeamWidth = this.visualBeamWidth;
+                
+                CTX.translate(interpPos.x, interpPos.y);
+                CTX.rotate(interpAngle);
+                CTX.scale(this.scale, this.scale);
+                
+                // Beam with gradient - VISUAL ONLY (delta time friendly)
+                if (this.state === 'fire' || this.state === 'leave') {
+                    const gradient = CTX.createLinearGradient(0, 0, 0, this.beamLength);
+                    gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+                    gradient.addColorStop(1, 'rgba(0, 255, 255, 0.2)');
+                    
+                    CTX.save();
+                    CTX.translate(0, this.mouthOffset);
+                    CTX.globalAlpha = 0.15;
+                    CTX.fillStyle = gradient;
+                    CTX.fillRect(-interpBeamWidth/2 - 8, 0, interpBeamWidth + 16, this.beamLength);
+                    
+                    CTX.globalAlpha = 0.6;
+                    CTX.fillStyle = 'white';
+                    CTX.fillRect(-interpBeamWidth/2, 0, interpBeamWidth, this.beamLength);
+                    CTX.restore();
+                }
+                
+                // Skull with glow - VISUAL ONLY (glow tính theo real time)
+                const visualGlow = Math.sin(performance.now() * 0.001) * 0.5 + 0.5;
+                CTX.shadowBlur = 1 * visualGlow;
+                CTX.shadowColor = 'cyan';
+                CTX.fillStyle = 'white';
+                CTX.beginPath();
+                CTX.moveTo(-18, -28);
+                CTX.quadraticCurveTo(0, -38, 18, -28);
+                CTX.quadraticCurveTo(32, -8, 22, 8);
+                CTX.lineTo(12, 28);
+                CTX.lineTo(-12, 28);
+                CTX.lineTo(-22, 8);
+                CTX.quadraticCurveTo(-32, -8, -18, -28);
+                CTX.fill();
+                CTX.shadowBlur = 1;
+                
+                // Eyes - FIXED LOGIC (frame-based)
+                CTX.fillStyle = 'black';
+                CTX.beginPath();
+                CTX.ellipse(-12, -8, 4, 6, 0.3, 0, Math.PI * 2);
+                CTX.fill();
+                CTX.beginPath();
+                CTX.ellipse(12, -8, 4, 6, -0.3, 0, Math.PI * 2);
+                CTX.fill();
+                
+                // Sans-style yellow pupil (one eye only) - FIXED LOGIC
+                if (this.state === 'fire') {
+                    const blink = (fixedFrames % 12 < 6) ? 1 : 0; // nháy theo frame
+                    const pupilScale = 0.35 + blink * 0.15;
+
+                    CTX.fillStyle = '#ffdd33';
+                    CTX.beginPath();
+                    CTX.ellipse(
+                        -12, -8,
+                        4 * pupilScale,
+                        6 * pupilScale,
+                        0.3,
+                        0,
+                        Math.PI * 2
+                    );
+                    CTX.fill();
+                }
+                
+                // Mouth
+                if (this.state === 'fire') {
+                    CTX.fillStyle = 'black';
+                    CTX.beginPath();
+                    CTX.ellipse(0, 22, 8, 4, 0, 0, Math.PI * 2);
+                    CTX.fill();
+                }
+                
+                CTX.restore();
+                
+                // Update visual properties for next render
+                this.visualBeamWidth = this.beamWidth;
+            }
+        }
+        
+        // === ENHANCED GASTER DEVOURER CLASS (HYBRID) ===
+        class GasterDevourer {
+            static _spriteCanvas = null;
+            
+            constructor(x, y, targetX, targetY, options = {}) {
+                this.pos = new Vector(x, y);
+                this.target = new Vector(targetX, targetY);
+                this.angle = Math.atan2(targetY - y, targetX - x) - Math.PI / 2;
+                this.prevAngle = this.angle;
+                this.scale = options.scale || 1.0;
+                this.type = 'devourer';
+                this.state = 'aim';
+                this.timer = 0;
+                this.aimTime = options.aimTime || 50;
+                this.chargeTime = options.chargeTime || 35;
+                this.dashSpeed = options.dashSpeed || 1;
+                this.vel = new Vector(0, 0);
+                this.warningLength = 0;
+                this.glowColor = '#8B00FF';
+                this.eyeColor = '#FF0000';
+                this.mouthOffset = 15;
+                this.hitRadius = 30 * this.scale;
+                this.active = true;
+                this.vibration = { x: 0, y: 0 };
+                this.hasHitPlayer = false;
+                this.spawnTimer = 0;
+                this.spawnWarningTime = 35; // frames
+                
+                // Visual-only properties
+                this.visualAngle = this.angle;
+            }
+            
+            static _prepareSprite() {
+                const canvas = document.createElement('canvas');
+                canvas.width = 80;
+                canvas.height = 80;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw devourer sprite
+                ctx.fillStyle = '#8B00FF';
+                ctx.beginPath();
+                ctx.moveTo(40 - 20, 40 - 28);
+                ctx.quadraticCurveTo(40, 40 - 36, 40 + 20, 40 - 28);
+                ctx.quadraticCurveTo(40 + 32, 40 - 12, 40 + 24, 40 + 12);
+                ctx.lineTo(40 + 16, 40 + 28);
+                ctx.lineTo(40 - 16, 40 + 28);
+                ctx.lineTo(40 - 24, 40 + 12);
+                ctx.quadraticCurveTo(40 - 32, 40 - 12, 40 - 20, 40 - 28);
+                ctx.fill();
+                
+                GasterDevourer._spriteCanvas = canvas;
+            }
+            
+            fixedUpdate() {
+                this.timer++;
+                this.spawnTimer++;
+                
+                // Save previous for interpolation
+                this.prevAngle = this.visualAngle;
+                this.pos.fixedUpdate();
+                
+                switch(this.state) {
+                    case 'aim':
+                        this.fixedUpdateAim();
+                        break;
+                    case 'charge':
+                        this.fixedUpdateCharge();
+                        break;
+                    case 'dash':
+                        this.fixedUpdateDash();
+                        break;
+                }
+                
+                this.visualAngle = this.angle;
+                
+                return this.active;
+            }
+            
+            fixedUpdateAim() {
+                // Track player - FIXED LOGIC
+                if (fixedFrames % 5 === 0) {
+                    const dx = player.pos.x - this.pos.x;
+                    const dy = player.pos.y - this.pos.y;
+                    this.dashAngle = Math.atan2(dy, dx);
+                    this.angle = this.dashAngle - Math.PI / 2;
+                }
+                
+                this.warningLength = Math.min(1500, this.timer * 15);
+                
+                if (this.timer >= this.aimTime) {
+                    this.state = 'charge';
+                    this.timer = 0;
+                    this.target.set(player.pos.x, player.pos.y);
+                }
+            }
+            
+            fixedUpdateCharge() {
+                // Strong vibration - FIXED LOGIC
+                this.vibration.x = (Math.random() - 0.5) * 4;
+                this.vibration.y = (Math.random() - 0.5) * 4;
+                
+                if (this.timer >= this.chargeTime) {
+                    this.state = 'dash';
+                    this.timer = 0;
+
+                    const dx = this.target.x - this.pos.x;
+                    const dy = this.target.y - this.pos.y;
+
+                    this.dashAngle = Math.atan2(dy, dx);
+
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > 0) {
+                        this.vel.set(
+                            Math.cos(this.dashAngle) * this.dashSpeed,
+                            Math.sin(this.dashAngle) * this.dashSpeed
+                        );
+                    }
+
+                    SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 8);
+                }
+            }
+            
+            fixedUpdateDash() {
+                this.pos.add(this.vel);
+                
+                // Check collision (only once per dash) - FIXED LOGIC
+                if (!this.hasHitPlayer && player.invulFrames <= 0) {
+                    const dx = this.pos.x - player.pos.x;
+                    const dy = this.pos.y - player.pos.y;
+                    const distSq = dx * dx + dy * dy;
+                    const hitRadiusSq = this.hitRadius * this.hitRadius;
+                    
+                    if (distSq < hitRadiusSq) {
+                        player.onHit();
+                        this.hasHitPlayer = true;
+                        this.active = false;
+                    }
+                }
+                
+                // Deactivate when off screen
+                if (this.pos.x < -100 || this.pos.x > WIDTH + 100 ||
+                    this.pos.y < -100 || this.pos.y > HEIGHT + 100 ||
+                    this.timer > 100) {
+                    this.active = false;
+                }
+            }
+            
+            draw(alpha) {
+                if (!GasterDevourer._spriteCanvas) {
+                    GasterDevourer._prepareSprite();
+                }
+                
+                CTX.save();
+                
+                // Interpolated position and angle
+                const interpPos = this.pos.interpolated(alpha);
+                const interpAngle = this.prevAngle + (this.visualAngle - this.prevAngle) * alpha;
+                
+                // === SPAWN WARNING - FIXED LOGIC (frame-based) ===
+                if (this.spawnTimer < this.spawnWarningTime) {
+                    CTX.save();
+
+                    const t = this.spawnTimer / this.spawnWarningTime;
+                    const alphaRing = (1 - t) * 0.8;
+                    const radius =
+                        this.hitRadius * (1.8 - t * 0.6);
+
+                    CTX.globalAlpha = alphaRing;
+                    CTX.strokeStyle = '#ff4444';
+                    CTX.lineWidth = 3;
+
+                    CTX.beginPath();
+                    CTX.arc(
+                        interpPos.x,
+                        interpPos.y,
+                        radius,
+                        0,
+                        Math.PI * 2
+                    );
+                    CTX.stroke();
+
+                    // inner pulse
+                    CTX.globalAlpha = alphaRing * 0.5;
+                    CTX.lineWidth = 1.5;
+                    CTX.beginPath();
+                    CTX.arc(
+                        interpPos.x,
+                        interpPos.y,
+                        radius * 0.6,
+                        0,
+                        Math.PI * 2
+                    );
+                    CTX.stroke();
+
+                    CTX.restore();
+                }
+
+                // === SPAWN DIRECTION ARROW (FPS STYLE) - FIXED LOGIC ===
+                if (this.spawnTimer < this.spawnWarningTime) {
+                    CTX.save();
+
+                    // Vector từ player -> devourer
+                    const playerInterpPos = player.pos.interpolated(alpha);
+                    const dx = interpPos.x - playerInterpPos.x;
+                    const dy = interpPos.y - playerInterpPos.y;
+                    const angle = Math.atan2(dy, dx);
+
+                    // Arrow position (gần player)
+                    const arrowDist = 60;
+                    const ax = playerInterpPos.x + Math.cos(angle) * arrowDist;
+                    const ay = playerInterpPos.y + Math.sin(angle) * arrowDist;
+
+                    CTX.translate(ax, ay);
+                    CTX.rotate(angle);
+
+                    const t = this.spawnTimer / this.spawnWarningTime;
+                    const arrowAlpha = (1 - t) * 0.9;
+
+                    CTX.globalAlpha = arrowAlpha;
+                    CTX.fillStyle = '#ff4444';
+                    CTX.strokeStyle = '#ffffff';
+                    CTX.lineWidth = 2;
+                    CTX.scale(1 + t * 0.4, 1 + t * 0.4);
+
+                    // Arrow shape
+                    CTX.beginPath();
+                    CTX.moveTo(0, 0);
+                    CTX.lineTo(-14, -8);
+                    CTX.lineTo(-10, 0);
+                    CTX.lineTo(-14, 8);
+                    CTX.closePath();
+                    CTX.fill();
+                    CTX.stroke();
+
+                    CTX.restore();
+                }
+                
+                // Draw devourer with interpolated position
+                const drawX = interpPos.x + this.vibration.x;
+                const drawY = interpPos.y + this.vibration.y;
+                
+                CTX.translate(drawX, drawY);
+                CTX.rotate(interpAngle);
+                CTX.scale(this.scale, this.scale);
+                
+                // Glow effect
+                CTX.shadowBlur = 0;
+                CTX.shadowColor = this.glowColor;
+                CTX.drawImage(GasterDevourer._spriteCanvas, -40, -40, 80, 80);
+                CTX.shadowBlur = 0;
+                
+                // Eyes - FIXED LOGIC
+                CTX.fillStyle = this.eyeColor;
+                CTX.beginPath();
+                CTX.ellipse(-12, -6, 3, 5, 0.2, 0, Math.PI * 2);
+                CTX.fill();
+                CTX.beginPath();
+                CTX.ellipse(12, -6, 3, 5, -0.2, 0, Math.PI * 2);
+                CTX.fill();
+                
+                // Blue pupil inside red eye (one eye only) - FIXED LOGIC
+                if (this.state === 'charge' || this.state === 'dash') {
+                    const pulse = Math.sin(fixedFrames * 0.35) * 0.5 + 0.5;
+                    const pupilScale = 0.35 + pulse * 0.15;
+
+                    CTX.fillStyle = '#00ccff';
+                    CTX.beginPath();
+                    CTX.ellipse(
+                        -12, -6,
+                        3 * pupilScale,
+                        5 * pupilScale,
+                        0.2,
+                        0,
+                        Math.PI * 2
+                    );
+                    CTX.fill();
+                }
+                
+                // Purple glow when dashing - VISUAL ONLY (real time)
+                if (this.state === 'dash') {
+                    const glowPulse = Math.sin(performance.now() * 0.003) * 0.5 + 0.5;
+
+                    CTX.save();
+                    CTX.shadowBlur = 3 + glowPulse * 3;
+                    CTX.shadowColor = '#B00020';
+
+                    CTX.fillStyle = '#00ccff';
+                    CTX.beginPath();
+                    CTX.ellipse(
+                        -12, -6,
+                        3.2,
+                        5.2,
+                        0.2,
+                        0,
+                        Math.PI * 2
+                    );
+                    CTX.fill();
+
+                    CTX.restore();
+                }
+                
+                // Mouth for charge/dash - FIXED LOGIC
+                if (this.state === 'charge' || this.state === 'dash') {
+                    CTX.fillStyle = '#400080';
+                    const mouthSize = 2 + Math.sin(fixedFrames * 0.2) * 1.5;
+                    CTX.beginPath();
+                    CTX.ellipse(0, 24, 12 + mouthSize, 6, 0, 0, Math.PI * 2);
+                    CTX.fill();
+                }
+                
+                CTX.restore();
+            }
+        }
+        
+        // === ENHANCED BULLET CLASS (HYBRID - FIXED LOGIC, INTERPOLATED RENDER) ===
+        class Bullet {
+            constructor(x, y, angle, speed, type, props = {}) {
+                this.pos = new Vector(x, y);
+                this.vel = new Vector(Math.cos(angle) * speed, Math.sin(angle) * speed);
+                this.radius = props.size || 4;
+                this.color = props.color || CONFIG.colors.bulletWhite;
+                this.type = type;
+                this.props = props;
+                this.timer = 0;
+                this.active = true;
+                this.id = Math.random();
+                this.spawnFrame = fixedFrames; // Dùng fixedFrames thay vì GAME_FRAME
+                this.hasHitPlayer = false;
+                
+                // Visual-only properties
+                this.visualAngle = angle;
+            }
+            
+            reset(x, y, angle, speed, type, props) {
+                this.pos.set(x, y);
+                this.vel.set(Math.cos(angle) * speed, Math.sin(angle) * speed);
+                this.radius = props.size || 4;
+                this.color = props.color || CONFIG.colors.bulletWhite;
+                this.type = type;
+                this.props = props;
+                this.timer = 0;
+                this.active = true;
+                this.id = Math.random();
+                this.spawnFrame = fixedFrames;
+                this.hasHitPlayer = false;
+                this.visualAngle = angle;
+            }
+            
+            fixedUpdate() {
+                // Save previous position for interpolation
+                this.pos.fixedUpdate();
+                
+                // Movement - FIXED LOGIC
+                this.pos.add(this.vel);
+                this.timer++;
+                
+                // Graze check - FIXED LOGIC
+                if (this.type === 'boss' && player && fixedFrames - this.spawnFrame > 3) {
+                    const distSq = this.pos.distSq(player.pos);
+                    const checkDist = player.radius + this.radius + CONFIG.player.grazeDistance;
+                    const checkDistSq = checkDist * checkDist;
+                    
+                    if (distSq < checkDistSq) {
+                        player.graze(this);
+                    }
+                }
+                
+                // Special behaviors - FIXED LOGIC
+                if (this.props.homing && this.type === 'boss' && player) {
+                    this.applyHoming();
+                }
+                
+                if (this.props.accel) this.vel.mult(this.props.accel);
+                if (this.props.curve) {
+                    this.applyCurve();
+                }
+                
+                // Boundary check
+                if (this.pos.x < -50 || this.pos.x > WIDTH + 50 || 
+                    this.pos.y < -50 || this.pos.y > HEIGHT + 50) {
+                    this.active = false;
+                }
+                
+                if (this.props.lifespan && this.timer > this.props.lifespan) {
+                    this.active = false;
+                }
+                
+                return this.active;
+            }
+            
+            applyHoming() {
+                const desired = new Vector(player.pos.x - this.pos.x, player.pos.y - this.pos.y);
+                desired.normalize().mult(this.vel.mag());
+                const steer = desired.sub(this.vel).limit(0.12);
+                this.vel.add(steer);
+            }
+            
+            applyCurve() {
+                const angle = Math.atan2(this.vel.y, this.vel.x) + this.props.curve;
+                const mag = this.vel.mag();
+                this.vel.x = Math.cos(angle) * mag;
+                this.vel.y = Math.sin(angle) * mag;
+                this.visualAngle = angle;
+            }
+            
+            draw(alpha) {
+                // Interpolated position
+                const interpPos = this.pos.interpolated(alpha);
+                
+                CTX.save();
+                
+                // Glow effect - VISUAL ONLY (real time)
+                const glowPulse = Math.sin(performance.now() * 0.002) * 0.3 + 0.7;
+                CTX.shadowBlur = 0 * glowPulse;
+                CTX.shadowColor = this.color;
+                
+                // Main bullet
+                CTX.fillStyle = this.color;
+                CTX.beginPath();
+                CTX.arc(interpPos.x, interpPos.y, this.radius, 0, Math.PI * 2);
+                CTX.fill();
+                
+                // Inner highlight for better visibility
+                if (this.radius > 3) {
+                    CTX.fillStyle = 'white';
+                    CTX.beginPath();
+                    CTX.arc(interpPos.x, interpPos.y, this.radius * 0.6, 0, Math.PI * 2);
+                    CTX.fill();
+                }
+                
+                CTX.restore();
+            }
+        }
+        
+        // === OPTIMIZED POINT ITEM CLASS (HYBRID) ===
+        class PointItem {
+            constructor(x, y, value = 1) {
+                this.pos = new Vector(x, y);
+                this.vel = new Vector(0, 2);
+                this.radius = 6;
+                this.color = '#ffff00';
+                this.value = value;
+                this.collected = false;
+                this.active = true;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.pulse = 0;
+                this.glowIntensity = 0;
+                this.collectTimer = 0;
+                this.autoCollectRange = 150;
+                
+                // Visual-only properties
+                this.visualRotation = this.rotation;
+            }
+            
+            reset(x, y, value) {
+                this.pos.set(x, y);
+                this.vel.set(0, 2);
+                this.radius = 6;
+                this.color = '#ffff00';
+                this.value = value;
+                this.collected = false;
+                this.active = true;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.visualRotation = this.rotation;
+                this.pulse = 0;
+                this.glowIntensity = 0;
+                this.collectTimer = 0;
+            }
+            
+            fixedUpdate() {
+                if (this.collected) {
+                    this.collectTimer++;
+                    if (this.collectTimer > 10) {
+                        this.active = false;
+                    }
+                    return this.active;
+                }
+                
+                // Save previous position
+                this.pos.fixedUpdate();
+                
+                // FIXED LOGIC: No delta time in calculations
+                this.pulse = Math.sin(fixedFrames * 0.1) * 0.5 + 0.5;
+                this.rotation += 0.05;
+                this.visualRotation = this.rotation;
+                
+                // Auto-collect when high on screen or in focus mode - FIXED LOGIC
+                const isHigh = this.pos.y < HEIGHT * 0.3;
+                const inFocusRange = FOCUS_ACTIVE && this.pos.distSq(player.pos) < this.autoCollectRange * this.autoCollectRange;
+                
+                if (isHigh || inFocusRange) {
+                    // Move toward player - FIXED LOGIC
+                    const dx = player.pos.x - this.pos.x;
+                    const dy = player.pos.y - this.pos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 0) {
+                        const speed = inFocusRange ? 15 : 8;
+                        this.vel.x = (dx / dist) * speed;
+                        this.vel.y = (dy / dist) * speed;
+                    }
+                }
+                
+                // Collection check - FIXED LOGIC
+                const distSq = this.pos.distSq(player.pos);
+                const collectDist = player.radius + this.radius;
+                const collectDistSq = collectDist * collectDist;
+                
+                if (distSq < collectDistSq) {
+                    this.collect();
+                }
+                
+                this.pos.add(this.vel);
+                
+                // Limit velocity - FIXED LOGIC
+                this.vel.mult(0.95);
+                
+                // Boundary check
+                if (this.pos.y > HEIGHT + 50) {
+                    this.active = false;
+                }
+                
+                return this.active;
+            }
+            
+            collect() {
+                if (this.collected) return;
+                
+                this.collected = true;
+                this.collectTimer = 0;
+                player.collectItem(this);
+                
+                // Reduced particle effect for performance
+                for (let i = 0; i < 4; i++) {
+                    const angle = (Math.PI * 2 / 4) * i;
+                    const p = getParticleFromPool(
+                        this.pos.x, this.pos.y,
+                        this.color
+                    );
+                    p.vel.set(Math.cos(angle) * 3, Math.sin(angle) * 3);
+                    particles.push(p);
+                }
+            }
+            
+            draw(alpha) {
+                if (this.collected) return;
+                
+                // Interpolated position
+                const interpPos = this.pos.interpolated(alpha);
+                
+                // Visual glow (real time)
+                const visualGlow = Math.sin(performance.now() * 0.001) * 0.3 + 0.7;
+                
+                CTX.save();
+                CTX.translate(interpPos.x, interpPos.y);
+                CTX.rotate(this.visualRotation);
+                
+                // Pulsing glow - VISUAL ONLY
+                CTX.shadowBlur = 0 * visualGlow;
+                CTX.shadowColor = this.color;
+                
+                // Star shape
+                CTX.fillStyle = this.color;
+                CTX.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * Math.PI * 2 / 5) - Math.PI / 2;
+                    const radius = this.radius * (i % 2 === 0 ? 1 : 0.5);
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    
+                    if (i === 0) CTX.moveTo(x, y);
+                    else CTX.lineTo(x, y);
+                }
+                CTX.closePath();
+                CTX.fill();
+                
+                CTX.restore();
+            }
+        }
+        
+        // === OPTIMIZED PARTICLE CLASS (DELTA TIME ONLY - VISUAL EFFECT) ===
+        class Particle {
+            constructor(x, y, color) {
+                this.pos = new Vector(x, y);
+                this.vel = new Vector((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
+                this.radius = Math.random() * 2 + 1;
+                this.color = color;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.active = true;
+            }
+            
+            reset(x, y, color) {
+                this.pos.set(x, y);
+                this.vel.set((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
+                this.radius = Math.random() * 2 + 1;
+                this.color = color;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.01;
+                this.active = true;
+            }
+            
+            fixedUpdate() {
+                // Particles are visual-only, no fixed update
+                return this.active;
+            }
+            
+            updateVisual(deltaFactor) {
+                // VISUAL ONLY: Use delta time for smooth effects
+                this.pos.add(new Vector(this.vel.x * deltaFactor, this.vel.y * deltaFactor));
+                this.life -= this.decay * deltaFactor;
+                this.vel.mult(0.98);
+                
+                if (this.life <= 0) {
+                    this.active = false;
+                }
+                
+                return this.active;
+            }
+            
+            draw(alpha) {
+                // Particles don't need interpolation, they're already smooth
+                CTX.globalAlpha = this.life;
+                CTX.fillStyle = this.color;
+                CTX.beginPath();
+                CTX.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+                CTX.fill();
+                CTX.globalAlpha = 1;
+            }
+        }
+        
+        // === ENHANCED BOSS CLASS (FIXED LOGIC) ===
+        class Boss {
+            constructor() {
+                this.pos = new Vector(WIDTH / 2, 120);
+                this.radius = 32;
+                this.color = CONFIG.colors.boss;
+                
+                this.spellCards = CONFIG.boss.totalSpells;
+                this.currentSpell = 1;
+                this.spellHp = CONFIG.boss.maxHpPerSpell;
+                this.spellMaxHp = CONFIG.boss.maxHpPerSpell;
+                this.spellTimer = 0;
+                this.spellDuration = CONFIG.boss.spellDuration;
+                this.spellName = "Hư Thức: Phán Xét";
+                this.spellCompleted = false;
+                
+                this.phase = 'normal';
+                this.phaseTimer = 0;
+                this.actionTimer = 0;
+                this.patternTimer = 0;
+                this.orbs = [];
+                this.orbShootCooldown = 0;
+                this.phasePatterns = {
+                    normal: this.patternNormal.bind(this),
+                    red: this.patternRed.bind(this),
+                    blue: this.patternBlue.bind(this),
+                    purple: this.patternPurple.bind(this),
+                    yellow: this.patternYellow.bind(this),
+                    gaster_only: this.patternGasterOnly.bind(this),
+                    rainbow: this.patternRainbow.bind(this),
+                    final: this.patternFinal.bind(this)
+                };
+                
+                // Enhanced pattern cooldowns
+                this.gasterBlasterCooldown = 0;
+                this.gasterDevourerCooldown = 0;
+                this.specialPatternCooldown = 0;
+            }
+            
+            fixedUpdate() {
+                this.actionTimer++;
+                this.phaseTimer++;
+                this.patternTimer++;
+                this.spellTimer++;
+                
+                // Save previous position for interpolation
+                this.pos.fixedUpdate();
+                
+                // Update cooldowns - FIXED LOGIC
+                this.gasterBlasterCooldown = Math.max(0, this.gasterBlasterCooldown - 1);
+                this.gasterDevourerCooldown = Math.max(0, this.gasterDevourerCooldown - 1);
+                this.specialPatternCooldown = Math.max(0, this.specialPatternCooldown - 1);
+                this.orbShootCooldown = Math.max(0, this.orbShootCooldown - 1);
+                
+                // Check spell timeout - FIXED LOGIC
+                if (this.spellTimer >= this.spellDuration && !this.spellCompleted) {
+                    this.spellCompleted = true;
+                    showStatus("SPELL CARD TIME OUT!");
+                    this.endSpell();
+                }
+                
+                // Movement with smooth easing - FIXED LOGIC (không delta)
+                const targetX = WIDTH / 2 + Math.sin(fixedFrames * 0.008) * 130;
+                const targetY = 100 + Math.sin(fixedFrames * 0.005) * 30;
+                this.pos.x += (targetX - this.pos.x) * 0.05;
+                this.pos.y += (targetY - this.pos.y) * 0.05;
+                
+                // Phase transition logic - FIXED LOGIC
+                if (this.phaseTimer > this.getPhaseDuration()) {
+                    this.transitionToNextPhase();
+                }
+                
+                // Execute current phase pattern - FIXED LOGIC
+                if (this.phasePatterns[this.phase]) {
+                    this.phasePatterns[this.phase]();
+                }
+                
+                // Spawn special attacks - FIXED LOGIC
+                this.spawnSpecialAttacks();
+                
+                // Update orbs - FIXED LOGIC
+                this.updateOrbs();
+                
+                // Update special entities - FIXED LOGIC
+                this.updateSpecialEntities();
+            }
+            
+            getPhaseDuration() {
+                const durations = {
+                    normal: 600,
+                    red: 800,
+                    blue: 700,
+                    purple: 900,
+                    yellow: 750,
+                    gaster_only: 1000,
+                    rainbow: 1200,
+                    final: 1500
+                };
+                return durations[this.phase] || 600;
+            }
+            
+            transitionToNextPhase() {
+                const phases = CONFIG.boss.phases;
+                const currentIndex = phases.indexOf(this.phase);
+                let nextIndex = currentIndex + 1;
+                
+                if (nextIndex >= phases.length) {
+                    nextIndex = 0;
+                }
+                
+                if (this.spellHp < this.spellMaxHp * 0.2 && Math.random() < 0.3) {
+                    this.changePhase('final');
+                } else {
+                    this.changePhase(phases[nextIndex]);
+                }
+            }
+            
+            changePhase(newPhase) {
+                this.phase = newPhase;
+                this.phaseTimer = 0;
+                this.actionTimer = 0;
+                
+                const phaseNames = {
+                    normal: "Hư Thức: Phán Xét",
+                    red: "Huyết Tế: Bỉ Ngạn Hoa Khai",
+                    blue: "Thương Lam: Vong Giới",
+                    purple: "Tử Vong: U Ám Vực Sâu",
+                    yellow: "Hoàng Kim: Thần Quang",
+                    gaster_only: "Hư Thức: Tuyệt Đối Hủy Diệt",
+                    rainbow: "Thất Sắc: Vũ Điệu Hỗn Độn",
+                    final: "TẬN THẾ: CHUNG CỤC PHÁN QUYẾT"
+                };
+                
+                this.spellName = phaseNames[newPhase] || "Hư Thức: Phán Xét";
+                
+                switch(newPhase) {
+                    case 'blue':
+                    case 'rainbow':
+                        this.spawnOrbs();
+                        break;
+                    case 'final':
+                        SHAKE_INTENSITY = 0;
+                        showStatus("CẢNH BÁO: GIAI ĐOẠN CUỐI CÙNG!");
+                        break;
+                }
+                
+                updateSpellUI();
+                showStatus(`SPELL CARD: ${this.spellName}`);
+            }
+            
+            spawnOrbs() {
+                this.orbs = [];
+                const count = this.phase === 'rainbow' ? 8 : 4;
+                for (let i = 0; i < count; i++) {
+                    this.orbs.push({
+                        angle: (Math.PI * 2 / count) * i,
+                        distance: 90,
+                        speed: 0.03,
+                        color: this.phase === 'rainbow' ? 
+                            ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#0088ff', '#0000ff', '#8800ff', '#ff00ff'][i] :
+                            '#0088ff',
+                        x: 0, y: 0
+                    });
+                }
+            }
+            
+            updateOrbs() {
+                this.orbs.forEach(orb => {
+                    orb.angle += orb.speed;
+                    orb.x = this.pos.x + Math.cos(orb.angle) * orb.distance;
+                    orb.y = this.pos.y + Math.sin(orb.angle) * orb.distance;
+                    
+                    if (this.orbShootCooldown === 0) {
+                        const angleToPlayer = Math.atan2(player.pos.y - orb.y, player.pos.x - orb.x);
+                        bullets.push(getBulletFromPool(
+                            orb.x, orb.y, angleToPlayer, 6, 'boss',
+                            { color: orb.color, size: 3 }
+                        ));
+                    }
+                });
+                
+                if (this.orbShootCooldown === 0) {
+                    this.orbShootCooldown = 45;
+                }
+            }
+            
+            spawnSpecialAttacks() {
+                if (this.gasterBlasterCooldown === 0) {
+                    const canSpawnBlaster = 
+                        (this.phase === 'gaster_only' && Math.random() < 0.05) ||
+                        (this.phase === 'final' && Math.random() < 0.08) ||
+                        (this.phase === 'purple' && Math.random() < 0.03) ||
+                        (this.phase === 'rainbow' && Math.random() < 0.02);
+                    
+                    if (canSpawnBlaster && blasters.length < CONFIG.performance.maxGasterBlasters) {
+                        this.spawnGasterBlasterPattern();
+                        this.gasterBlasterCooldown = 120;
+                    }
+                }
+                
+                if (this.gasterDevourerCooldown === 0) {
+                    const canSpawnDevourer = 
+                        (this.phase === 'gaster_only' && Math.random() < 0.04) ||
+                        (this.phase === 'final' && Math.random() < 0.06) ||
+                        (this.phase === 'red' && Math.random() < 0.02) ||
+                        (this.phase === 'yellow' && Math.random() < 0.01);
+                    
+                    if (canSpawnDevourer && gasterDevourers.length < CONFIG.performance.maxGasterDevourers) {
+                        this.spawnGasterDevourerPattern();
+                        this.gasterDevourerCooldown = 180;
+                    }
+                }
+                
+                if (this.specialPatternCooldown === 0) {
+                    if (this.phase === 'final' && Math.random() < 0.02) {
+                        this.spawnUltimatePattern();
+                        this.specialPatternCooldown = 300;
+                    }
+                }
+            }
+            
+            spawnGasterBlasterPattern() {
+                const patterns = [
+                    this.spawnGasterBlasterCircle.bind(this),
+                    this.spawnGasterBlasterAimed.bind(this),
+                    this.spawnGasterBlasterCross.bind(this),
+                    this.spawnGasterBlasterSpiral.bind(this),
+                    this.spawnGasterBlasterRandomAim.bind(this),
+                    this.spawnGasterBlasterSnapCircle.bind(this),
+                    this.spawnGasterBlasterWallPressure.bind(this),
+                    this.spawnGasterBlasterGiant.bind(this)
+                ];
+
+                const patternIndex = Math.floor(Math.random() * patterns.length);
+                patterns[patternIndex]();
+            }
+            
+            spawnGasterBlasterCircle() {
+                const num = 7 + Math.floor(Math.random() * 8);
+                const radius = 200 + Math.random() * 200;
+                const centerX = player.pos.x + (Math.random() - 0.5) * 100;
+                const centerY = player.pos.y + (Math.random() - 0.5) * 100;
+                
+                for (let i = 0; i < num; i++) {
+                    const angle = (Math.PI * 2 / num) * i;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+                    
+                    setTimeout(() => {
+                        blasters.push(new GasterBlaster(x, y, centerX, centerY, {
+                            delay: 30 + i * 2,
+                            duration: 40,
+                            scale: 0.8 + Math.random() * 0.4
+                        }));
+                    }, i * 30);
+                }
+            }
+            
+            spawnGasterBlasterAimed() {
+                const count = 5 + Math.floor(Math.random() * 3);
+                const pattern = Math.random();
+                
+                for (let i = 0; i < count; i++) {
+                    let x, y;
+                    
+                    if (pattern < 0.33) {
+                        const side = Math.random() < 0.5 ? 0 : WIDTH;
+                        const yPos = 50 + Math.random() * (HEIGHT - 100);
+                        x = side;
+                        y = yPos;
+                    } else if (pattern < 0.66) {
+                        x = Math.random() * WIDTH;
+                        y = -50;
+                    } else {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 150 + Math.random() * 150;
+                        x = player.pos.x + Math.cos(angle) * distance;
+                        y = player.pos.y + Math.sin(angle) * distance;
+                    }
+                    
+                    blasters.push(new GasterBlaster(x, y, player.pos.x, player.pos.y, {
+                        delay: 20 + i * 15,
+                        duration: 25 + Math.random() * 10,
+                        scale: 0.7 + Math.random() * 0.5
+                    }));
+                }
+            }
+            
+            spawnGasterBlasterCross() {
+                const centerX = player.pos.x;
+                const centerY = player.pos.y;
+                const distance = 400;
+                
+                const positions = [
+                    [centerX - distance, centerY, centerX, centerY],
+                    [centerX + distance, centerY, centerX, centerY],
+                    [centerX, centerY - distance, centerX, centerY],
+                    [centerX, centerY + distance, centerX, centerY]
+                ];
+                
+                positions.forEach(([x, y, tx, ty], i) => {
+                    setTimeout(() => {
+                        blasters.push(new GasterBlaster(x, y, tx, ty, {
+                            delay: 20,
+                            duration: 35,
+                            scale: 1.0
+                        }));
+                    }, i * 100);
+                });
+            }
+            
+            spawnGasterBlasterSpiral() {
+                const num = 9;
+                const radius = 350;
+                const centerX = WIDTH / 2;
+                const centerY = HEIGHT / 3;
+                
+                for (let i = 0; i < num; i++) {
+                    const angle = (Math.PI * 2 / num) * i + fixedFrames * 0.02;
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+                    const targetAngle = angle + Math.PI + Math.sin(fixedFrames * 0.01) * 0.5;
+                    const tx = centerX + Math.cos(targetAngle) * 100;
+                    const ty = centerY + Math.sin(targetAngle) * 100;
+                    
+                    setTimeout(() => {
+                        blasters.push(new GasterBlaster(x, y, tx, ty, {
+                            delay: i * 10,
+                            duration: 30,
+                            scale: 0.8 + Math.sin(i) * 0.2
+                        }));
+                    }, i * 50);
+                }
+            }
+            
+            spawnGasterBlasterRandomAim() {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 250;
+
+                let bx = player.pos.x + Math.cos(angle) * dist;
+                let by = player.pos.y + Math.sin(angle) * dist;
+
+                bx = Math.max(50, Math.min(WIDTH - 50, bx));
+                by = Math.max(50, Math.min(HEIGHT - 150, by));
+
+                blasters.push(new GasterBlaster(
+                    bx, by,
+                    player.pos.x, player.pos.y,
+                    {
+                        delay: 45,
+                        duration: 40,
+                        scale: 0.85,
+                        trackOnEnter: true
+                    }
+                ));
+            }
+
+            spawnGasterBlasterSnapCircle() {
+                const num = 14;
+                const radius = 340;
+
+                for (let i = 0; i < num; i++) {
+                    const angle = (Math.PI * 2 / num) * i;
+                    const bx = player.pos.x + Math.cos(angle) * radius;
+                    const by = player.pos.y + Math.sin(angle) * radius;
+
+                    blasters.push(new GasterBlaster(
+                        bx, by,
+                        player.pos.x, player.pos.y,
+                        {
+                            delay: 50,
+                            duration: 30,
+                            scale: 1.1,
+                            trackOnEnter: true
+                        }
+                    ));
+                }
+            }
+
+            spawnGasterBlasterWallPressure() {
+                const side = Math.random() < 0.5 ? 0 : WIDTH;
+                const targetX = side === 0 ? WIDTH : 0;
+
+                const y = Math.max(
+                    80,
+                    Math.min(HEIGHT - 80, player.pos.y + (Math.random() - 0.5) * 220)
+                );
+
+                blasters.push(new GasterBlaster(
+                    side, y,
+                    targetX, y,
+                    {
+                        delay: 30,
+                        duration: 18,
+                        scale: 0.75,
+                        trackOnEnter: true
+                    }
+                ));
+            }
+
+            spawnGasterBlasterGiant() {
+                blasters.push(new GasterBlaster(
+                    WIDTH / 2,
+                    90,
+                    WIDTH / 2,
+                    HEIGHT,
+                    {
+                        delay: 80,
+                        duration: 60,
+                        scale: 2.3,
+                        trackOnEnter: true
+                    }
+                ));
+            }
+            
+            spawnGasterDevourerPattern() {
+                const patterns = [
+                    this.spawnGasterDevourersSingle.bind(this),
+                    this.spawnGasterDevourersPair.bind(this),
+                    this.spawnGasterDevourersWave.bind(this),
+                    this.spawnGasterDevourersFromBoss.bind(this)
+                ];
+                
+                const patternIndex = Math.floor(Math.random() * patterns.length);
+                patterns[patternIndex]();
+            }
+            
+            spawnGasterDevourersSingle() {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 220 + Math.random() * 120;
+
+                const x = player.pos.x + Math.cos(angle) * dist;
+                const y = player.pos.y + Math.sin(angle) * dist;
+
+                gasterDevourers.push(new GasterDevourer(
+                    x, y,
+                    player.pos.x, player.pos.y,
+                    {
+                        scale: 0.8 + Math.random() * 0.4,
+                        aimTime: 40 + Math.random() * 20,
+                        dashSpeed: 18 + Math.random() * 6
+                    }
+                ));
+            }
+            
+            spawnGasterDevourersPair() {
+                const baseAngle = Math.random() * Math.PI * 2;
+                const offset = Math.PI / 6;
+
+                for (let i = 0; i < 2; i++) {
+                    setTimeout(() => {
+                        const angle = baseAngle + (i === 0 ? -offset : offset);
+                        const dist = 240;
+
+                        const x = player.pos.x + Math.cos(angle) * dist;
+                        const y = player.pos.y + Math.sin(angle) * dist;
+
+                        gasterDevourers.push(new GasterDevourer(
+                            x, y,
+                            player.pos.x, player.pos.y,
+                            {
+                                scale: 0.7 + Math.random() * 0.3,
+                                aimTime: 50 + Math.random() * 10,
+                                dashSpeed: 13 + Math.random() * 4
+                            }
+                        ));
+                    }, i * 200);
+                }
+            }
+            
+            spawnGasterDevourersWave() {
+                const count = 3;
+                const baseAngle = Math.random() * Math.PI * 2;
+                const spread = Math.PI / 8;
+                const dist = 260;
+
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const angle = baseAngle + (i - 1) * spread;
+
+                        const x = player.pos.x + Math.cos(angle) * dist;
+                        const y = player.pos.y + Math.sin(angle) * dist;
+
+                        gasterDevourers.push(new GasterDevourer(
+                            x, y,
+                            player.pos.x, player.pos.y,
+                            {
+                                scale: 0.6 + Math.random() * 0.2,
+                                aimTime: 30 + Math.random() * 10,
+                                dashSpeed: 16 + Math.random() * 4
+                            }
+                        ));
+                    }, i * 150);
+                }
+            }
+            
+            spawnGasterDevourersFromBoss() {
+                const count = 2;
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 100;
+                        const x = this.pos.x + Math.cos(angle) * distance;
+                        const y = this.pos.y + Math.sin(angle) * distance;
+                        
+                        gasterDevourers.push(new GasterDevourer(
+                            x, y,
+                            player.pos.x, player.pos.y,
+                            { 
+                                scale: 0.9 + Math.random() * 0.3,
+                                aimTime: 30,
+                                dashSpeed: 10 + Math.random() * 4
+                            }
+                        ));
+                    }, i * 100);
+                }
+            }
+            
+            spawnUltimatePattern() {
+                SHAKE_INTENSITY = 0;
+                showStatus("CỰC KỲ NGUY HIỂM: TẤN CÔNG TỐI THƯỢNG!");
+                
+                this.spawnGasterBlasterCircle();
+                
+                setTimeout(() => {
+                    this.spawnGasterDevourersWave();
+                }, 500);
+                
+                setTimeout(() => {
+                    for (let i = 0; i < 60; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 2 + Math.random() * 3;
+                        bullets.push(getBulletFromPool(
+                            this.pos.x, this.pos.y, angle, speed, 'boss',
+                            { 
+                                color: ['#ff0000', '#ff8800', '#ffff00'][Math.floor(Math.random() * 3)],
+                                size: 4 + Math.random() * 3,
+                                curve: (Math.random() - 0.5) * 0.02
+                            }
+                        ));
+                    }
+                }, 1000);
+            }
+            
+            updateSpecialEntities() {
+                for (let i = blasters.length - 1; i >= 0; i--) {
+                    if (!blasters[i].fixedUpdate()) {
+                        blasters.splice(i, 1);
+                    }
+                }
+                
+                for (let i = gasterDevourers.length - 1; i >= 0; i--) {
+                    if (!gasterDevourers[i].fixedUpdate()) {
+                        gasterDevourers.splice(i, 1);
+                    }
+                }
+                
+                if (blasters.length > CONFIG.performance.maxGasterBlasters) {
+                    blasters = blasters.slice(-CONFIG.performance.maxGasterBlasters);
+                }
+                if (gasterDevourers.length > CONFIG.performance.maxGasterDevourers) {
+                    gasterDevourers = gasterDevourers.slice(-CONFIG.performance.maxGasterDevourers);
+                }
+            }
+            
+                        // === DANMAKU PATTERNS (TOUHOU STYLE - ORDERLY & GEOMETRIC) ===
+            
+            // Helper để bắn vòng tròn (Ring)
+            fireRing(count, speed, offsetAngle, color, size, props = {}) {
+                const step = (Math.PI * 2) / count;
+                for (let i = 0; i < count; i++) {
+                    const angle = offsetAngle + i * step;
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle, speed, 'boss',
+                        { color: color, size: size, ...props }
+                    ));
+                }
+            }
+
+            // Helper để bắn chùm (N-Way) nhắm vào player
+            fireNWay(ways, spreadAngle, speed, color, size) {
+                const baseAngle = Math.atan2(player.pos.y - this.pos.y, player.pos.x - this.pos.x);
+                const startAngle = baseAngle - spreadAngle / 2;
+                const step = spreadAngle / (ways - 1);
+                
+                for (let i = 0; i < ways; i++) {
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, startAngle + i * step, speed, 'boss',
+                        { color: color, size: size }
+                    ));
+                }
+            }
+
+            patternNormal() {
+                // Phase 1: Basic Streaming & Rings
+                // 1. Aimed stream: Bắt buộc người chơi phải di chuyển nhẹ (Micro-dodging)
+                if (fixedFrames % 4 === 0) { // Bắn liên tục
+                    const angle = Math.atan2(player.pos.y - this.pos.y, player.pos.x - this.pos.x);
+                    // Thêm chút nhiễu nhẹ để tạo độ lan
+                    const spread = Math.sin(fixedFrames * 0.1) * 0.1; 
+                    
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle + spread, 5.5, 'boss',
+                        { color: CONFIG.colors.bulletWhite, size: 4 }
+                    ));
+                }
+                
+                // 2. Slow expanding rings: Tạo áp lực không gian
+                if (this.actionTimer % 120 === 0) {
+                    this.fireRing(24, 2.5, 0, '#aaaaaa', 5);
+                }
+                
+                // 3. Fast lanes: Đạn nhanh cắt ngang
+                if (this.actionTimer % 60 === 30) {
+                    this.fireNWay(3, 0.4, 7, '#ffffff', 3);
+                }
+            }
+            
+            patternRed() {
+                // Phase 2: Crossing Patterns (Kunii style)
+                // Đạn bắn chéo nhau tạo thành các hình thoi an toàn
+                
+                const freq = 8;
+                if (fixedFrames % freq === 0) {
+                    const t = fixedFrames / freq;
+                    // Tạo 2 luồng xoắn ngược chiều nhau
+                    const angle1 = Math.PI / 2 + Math.sin(t * 0.1) * 0.8;
+                    const angle2 = Math.PI / 2 - Math.sin(t * 0.1) * 0.8;
+                    
+                    // Luồng 1
+                    bullets.push(getBulletFromPool(
+                        this.pos.x - 30, this.pos.y, angle1, 5, 'boss',
+                        { color: CONFIG.colors.bulletRed, size: 4 }
+                    ));
+                     bullets.push(getBulletFromPool(
+                        this.pos.x - 30, this.pos.y, angle1 + Math.PI, 5, 'boss',
+                        { color: CONFIG.colors.bulletRed, size: 4 }
+                    ));
+
+                    // Luồng 2
+                    bullets.push(getBulletFromPool(
+                        this.pos.x + 30, this.pos.y, angle2, 5, 'boss',
+                        { color: '#ff8888', size: 4 }
+                    ));
+                    bullets.push(getBulletFromPool(
+                        this.pos.x + 30, this.pos.y, angle2 + Math.PI, 5, 'boss',
+                        { color: '#ff8888', size: 4 }
+                    ));
+                }
+
+                // Burst định kỳ
+                if (this.actionTimer % 90 === 0) {
+                    this.fireRing(32, 4, fixedFrames * 0.01, '#ff0000', 3);
+                }
+            }
+            
+            patternBlue() {
+                // Phase 3: Spirals (Hoa nở)
+                // Đạn cong tạo thành hình cánh hoa xoay
+                
+                if (fixedFrames % 4 === 0) {
+                    const arms = 4; // 4 cánh tay xoắn
+                    const spinSpeed = 0.03;
+                    const baseAngle = fixedFrames * spinSpeed;
+                    
+                    for (let i = 0; i < arms; i++) {
+                        const angle = baseAngle + (Math.PI * 2 / arms) * i;
+                        bullets.push(getBulletFromPool(
+                            this.pos.x, this.pos.y, angle, 4, 'boss',
+                            { 
+                                color: CONFIG.colors.bulletBlue, 
+                                size: 4,
+                                curve: 0.006 // Bẻ cong đạn
+                            }
+                        ));
+                         bullets.push(getBulletFromPool(
+                            this.pos.x, this.pos.y, angle, 3, 'boss',
+                            { 
+                                color: '#88ccff', 
+                                size: 3,
+                                curve: 0.008 // Cong nhiều hơn -> tạo lớp trong
+                            }
+                        ));
+                    }
+                }
+                
+                // Homing shots định kỳ để phá vỡ vị trí safe spot
+                if (this.actionTimer % 140 === 0) {
+                    this.fireNWay(5, 0.5, 3, '#00ffff', 6);
+                }
+            }
+            
+            patternPurple() {
+                // Phase 4: Dense Curtains & Traps
+                // Đạn rơi từ trên xuống giống thác nước
+                
+                if (fixedFrames % 10 === 0) {
+                    const width = WIDTH * 0.8;
+                    const startX = (WIDTH - width) / 2;
+                    const count = 8;
+                    const step = width / (count - 1);
+                    
+                    // Dịch chuyển vị trí bắn theo hàm sin
+                    const shift = Math.sin(fixedFrames * 0.02) * 40;
+                    
+                    for (let i = 0; i < count; i++) {
+                        bullets.push(getBulletFromPool(
+                            startX + i * step + shift, 0, Math.PI / 2, 3, 'boss',
+                            { 
+                                color: CONFIG.colors.bulletPurple, 
+                                size: 5,
+                                accel: 1.01 // Rơi nhanh dần
+                            }
+                        ));
+                    }
+                }
+
+                // Đạn bắn từ boss ra để ép người chơi không đứng quá cao
+                if (fixedFrames % 60 === 0) {
+                    this.fireRing(16, 3, fixedFrames * 0.02, '#ff00ff', 3);
+                }
+            }
+            
+            patternYellow() {
+                // Phase 5: Sunburst (Laser lines)
+                // Các tia đạn thẳng xoay tròn
+                
+                if (fixedFrames % 3 === 0) {
+                    const rays = 6;
+                    // Góc xoay chậm dần rồi nhanh dần
+                    const rot = fixedFrames * 0.015 + Math.sin(fixedFrames * 0.005); 
+                    
+                    for (let i = 0; i < rays; i++) {
+                        const angle = rot + (Math.PI * 2 / rays) * i;
+                        
+                        // Bắn 1 dòng đạn (giả lập laser)
+                        bullets.push(getBulletFromPool(
+                            this.pos.x, this.pos.y, angle, 7, 'boss',
+                            { color: '#ffff00', size: 4 }
+                        ));
+                        
+                        // Đạn chậm đi kèm để lấp khoảng trống
+                        if (fixedFrames % 6 === 0) {
+                            bullets.push(getBulletFromPool(
+                                this.pos.x, this.pos.y, angle + 0.05, 4, 'boss',
+                                { color: '#aa8800', size: 3 }
+                            ));
+                        }
+                    }
+                }
+            }
+            
+            patternGasterOnly() {
+                // Phase 6: Support for Blasters
+                // Đạn rất chậm và to để chiếm không gian, nhường sân khấu cho Blaster
+                
+                if (this.actionTimer % 120 === 0) {
+                    showStatus("GASTER: KHÔNG GIAN HỖN LOẠN");
+                }
+                
+                // Big slow bubbles
+                if (fixedFrames % 40 === 0) {
+                    const angle = Math.random() * Math.PI * 2;
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle, 1.5, 'boss',
+                        { color: '#ffffff', size: 12, lifespan: 400 } // Đạn to, sống lâu
+                    ));
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle + Math.PI, 1.5, 'boss',
+                        { color: '#ffffff', size: 12, lifespan: 400 }
+                    ));
+                }
+                
+                // Sniper shots (bắn tỉa)
+                if (fixedFrames % 90 === 0) {
+                    const angle = Math.atan2(player.pos.y - this.pos.y, player.pos.x - this.pos.x);
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle, 9, 'boss',
+                        { color: '#000000', size: 6 } // Đạn đen nhanh
+                    ));
+                }
+            }
+            
+            patternRainbow() {
+                // Phase 7: Layered Chaos (Touhou Extra Stage vibe)
+                // Kết hợp vòng tròn và dòng đạn xoắn
+                
+                // Lớp 1: Vòng tròn 7 màu mở rộng đều đặn
+                if (this.actionTimer % 45 === 0) {
+                    const colors = ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#0088ff', '#0000ff', '#8800ff'];
+                    const col = colors[(this.actionTimer / 45) % 7];
+                    this.fireRing(36, 3, fixedFrames * 0.01, col, 4);
+                }
+                
+                // Lớp 2: Luồng đạn xoắn kép nhanh
+                if (fixedFrames % 4 === 0) {
+                    const angle1 = fixedFrames * 0.04;
+                    const angle2 = -fixedFrames * 0.04; // Ngược chiều
+                    
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle1, 5, 'boss',
+                        { color: '#ffffff', size: 3 }
+                    ));
+                    bullets.push(getBulletFromPool(
+                        this.pos.x, this.pos.y, angle2, 5, 'boss',
+                        { color: '#ffffff', size: 3 }
+                    ));
+                }
+            }
+            
+            patternFinal() {
+                // FINAL SPELL: BEAUTIFUL GEOMETRY
+                // Hoa mạn đà la (Mandala pattern)
+                
+                // Chuyển đổi pattern theo thời gian
+                const subPhase = Math.floor(this.actionTimer / 300) % 3;
+                
+                if (subPhase === 0) {
+                    // Pattern 1: Bông hoa xoay (Rotating Flower)
+                    if (fixedFrames % 5 === 0) {
+                        const petals = 5;
+                        const t = fixedFrames * 0.02;
+                        for(let i=0; i<petals; i++) {
+                            const base = t + (Math.PI*2/petals)*i;
+                            // Wiggle (rung lắc) góc bắn
+                            const wiggle = Math.sin(fixedFrames * 0.1) * 0.3;
+                            
+                            bullets.push(getBulletFromPool(
+                                this.pos.x, this.pos.y, base + wiggle, 4, 'boss',
+                                { color: '#ff0044', size: 4 }
+                            ));
+                        }
+                    }
+                } 
+                else if (subPhase === 1) {
+                    // Pattern 2: Đạn dừng rồi bay (Stop & Go)
+                    if (this.actionTimer % 60 === 0) {
+                        const count = 24;
+                        for(let i=0; i<count; i++) {
+                            const angle = (Math.PI*2/count)*i;
+                            const b = getBulletFromPool(
+                                this.pos.x, this.pos.y, angle, 6, 'boss',
+                                { color: '#4400ff', size: 5, accel: 0.92 } // Giảm tốc độ nhanh
+                            );
+                            bullets.push(b);
+                            
+                            // Hack nhỏ: Đạn này sẽ tự tăng tốc lại sau khi chậm hẳn (cần logic update ở Bullet class, 
+                            // nhưng ở đây ta dùng accel 0.92 sẽ khiến nó dừng lại gần như hoàn toàn lơ lửng)
+                        }
+                    }
+                    // Bắn đạn Aimed để ép người chơi chạy qua đạn tĩnh
+                    if (fixedFrames % 10 === 0) {
+                        this.fireNWay(1, 0, 4, '#ffaa00', 3);
+                    }
+                }
+                else {
+                    // Pattern 3: All-out (Vòng tròn đạn dày đặc)
+                     if (fixedFrames % 8 === 0) {
+                        const t = fixedFrames * 0.03;
+                        // 2 vòng xoắn ngược nhau
+                        this.fireRing(12, 3, t, '#ff0000', 3);
+                        this.fireRing(12, 4, -t, '#0000ff', 3);
+                    }
+                }
+                
+                // Ultimate burst mỗi 500 frames
+                if (this.actionTimer % 500 === 499) {
+                    SHAKE_INTENSITY = 0; // Tắt shake để nhìn rõ pattern
+                    showStatus("PHÁN QUYẾT CUỐI CÙNG!");
+                    // Tạo hình tròn đạn cực lớn tỏa ra
+                    for(let r=2; r<=6; r+=1) {
+                        this.fireRing(40, r, 0, '#ffffff', 4);
+                    }
+                }
+            }
+
+            
+            takeDamage(amount) {
+                // === [FIX] CHẶN SÁT THƯƠNG KHI ĐANG CHUYỂN GIAI ĐOẠN ===
+                if (this.spellCompleted) return;
+                // =======================================================
+
+                // Logic giảm 50% sát thương (nếu bạn đã thêm trước đó)
+                amount *= 0.5; 
+
+                if (this.orbs.length > 0) {
+                    amount *= (0.9 - this.orbs.length * 0.1);
+                }
+                
+                this.spellHp -= amount;
+                
+                if (Math.random() < 0.3 && items.length < CONFIG.performance.maxItems) {
+                    const itemCount = Math.min(3, 1 + Math.floor(player.power / 8));
+                    for (let i = 0; i < itemCount; i++) {
+                        items.push(getItemFromPool(
+                            this.pos.x + (Math.random() - 0.5) * 40,
+                            this.pos.y + (Math.random() - 0.5) * 40,
+                            1 + Math.floor(player.power / 12)
+                        ));
+                    }
+                }
+                
+                if (this.spellHp <= 0) {
+                    this.endSpell();
+                }
+            }
+            
+            endSpell() {
+                this.spellCompleted = true;
+                this.currentSpell++;
+                
+                createExplosion(this.pos.x, this.pos.y, 60, this.color);
+                SHAKE_INTENSITY = 0;
+                
+                const timeBonus = Math.max(0, this.spellDuration - this.spellTimer);
+                const spellBonus = Math.floor(timeBonus * SPELL_BONUS * 20 * (player.power / 4));
+                addScore(spellBonus);
+                
+                showStatus(`SPELL CAPTURED! +${spellBonus.toLocaleString()} Points`);
+                
+                setTimeout(() => {
+                    this.spellHp = this.spellMaxHp;
+                    this.spellTimer = 0;
+                    this.spellCompleted = false;
+                    this.phase = 'normal';
+                    this.changePhase('normal');
+                    SPELL_BONUS += 0.15;
+                    
+                    CONFIG.boss.maxHpPerSpell *= 1.1;
+                    this.spellMaxHp = CONFIG.boss.maxHpPerSpell;
+                    this.spellHp = this.spellMaxHp;
+                }, 2500);
+            }
+            
+            draw(alpha) {
+                const interpPos = this.pos.interpolated(alpha);
+                
+                // Draw orbs
+                this.orbs.forEach(orb => {
+                    CTX.save();
+                    CTX.shadowBlur = 0;
+                    CTX.shadowColor = orb.color;
+                    CTX.fillStyle = orb.color;
+                    CTX.beginPath();
+                    CTX.arc(orb.x, orb.y, 8, 0, Math.PI * 2);
+                    CTX.fill();
+                    CTX.restore();
+                });
+                
+                // Draw boss with glow
+                CTX.save();
+                
+                let glowColor = this.color;
+                if (this.phase === 'red') glowColor = '#ff0000';
+                else if (this.phase === 'blue') glowColor = '#0088ff';
+                else if (this.phase === 'purple') glowColor = '#aa00ff';
+                else if (this.phase === 'yellow') glowColor = '#ffff00';
+                else if (this.phase === 'rainbow') glowColor = '#ffffff';
+                else if (this.phase === 'final') glowColor = '#ff0000';
+                
+                const visualGlow = Math.sin(performance.now() * 0.001) * 0.5 + 0.5;
+                CTX.shadowBlur = 0 * visualGlow;
+                CTX.shadowColor = glowColor;
+                
+                // Main body
+                CTX.fillStyle = this.color;
+                CTX.beginPath();
+                CTX.arc(interpPos.x, interpPos.y, this.radius, 0, Math.PI * 2);
+                CTX.fill();
+                
+                // Core
+                CTX.fillStyle = 'white';
+                CTX.beginPath();
+                CTX.arc(interpPos.x, interpPos.y, 10, 0, Math.PI * 2);
+                CTX.fill();
+                
+                CTX.restore();
+                
+                // Final phase aura - VISUAL ONLY (real time)
+                if (this.phase === 'final') {
+                    CTX.save();
+                    CTX.globalAlpha = 0.3;
+                    CTX.strokeStyle = '#ff0000';
+                    CTX.lineWidth = 3;
+                    CTX.beginPath();
+                    CTX.arc(interpPos.x, interpPos.y, 50 + Math.sin(performance.now() * 0.001) * 10, 0, Math.PI * 2);
+                    CTX.stroke();
+                    CTX.restore();
+                }
+            }
+        }
+        
+        // === ENHANCED PLAYER CLASS (HYBRID) ===
+        class Player {
+            constructor() {
+                this.pos = new Vector(WIDTH / 2, HEIGHT - 100);
+                this.radius = 15;
+                this.hitboxRadius = this.radius * CONFIG.player.hitboxScale;
+                this.color = CONFIG.colors.player;
+                
+                this.lives = CONFIG.player.startLives;
+                this.bombs = CONFIG.player.startBombs;
+                this.invulFrames = 0;
+                this.deathTimer = 0;
+                this.hitThisFrame = false;
+                
+                this.power = CONFIG.player.powerStart;
+                this.powerMax = CONFIG.player.powerMax;
+                
+                this.grazeCount = 0;
+                this.grazedBullets = new Set();
+                
+                this.attackTimer = 0;
+                this.bombActive = false;
+                this.bombTimer = 0;
+                
+                this.moveTarget = new Vector(WIDTH / 2, HEIGHT - 100);
+                this.velocity = new Vector(0, 0);
+                this.speed = CONFIG.player.moveSpeed;
+                
+                this.autoBombCooldown = 0;
+                this.dangerLevel = 0;
+                
+                this.rotation = 0;
+            }
+            
+            fixedUpdate() {
+                this.hitThisFrame = false;
+                
+                // FIXED LOGIC: Timers count in frames
+                this.invulFrames = Math.max(0, this.invulFrames - 1);
+                this.deathTimer = Math.max(0, this.deathTimer - 1);
+                this.autoBombCooldown = Math.max(0, this.autoBombCooldown - 1);
+                this.bombTimer = Math.max(0, this.bombTimer - 1);
+                this.bombActive = this.bombTimer > 0;
+                
+                // Save previous position for interpolation
+                this.pos.fixedUpdate();
+                
+                // Movement - FIXED LOGIC (không delta)
+                this.fixedUpdateMovement();
+                
+                // Attack - FIXED LOGIC
+                this.fixedUpdateAttack();
+                
+                // Auto-bomb - FIXED LOGIC
+                this.fixedUpdateAutoBomb();
+                
+                // Danger level - FIXED LOGIC
+                this.fixedUpdateDangerLevel();
+                
+                // Update UI
+                this.updateUI();
+                
+                // Rotation - VISUAL ONLY (sẽ tính trong render)
+            }
+            
+            fixedUpdateMovement() {
+                FOCUS_ACTIVE = document.getElementById('btn-focus').classList.contains('active') || MULTI_TOUCH;
+                
+                if (FOCUS_ACTIVE) {
+                    this.speed = CONFIG.player.focusSpeed;
+                    this.color = CONFIG.colors.playerFocus;
+                } else {
+                    this.speed = CONFIG.player.moveSpeed;
+                    this.color = CONFIG.colors.player;
+                }
+                
+                // Smooth movement - FIXED LOGIC
+                const dx = this.moveTarget.x - this.pos.x;
+                const dy = this.moveTarget.y - this.pos.y;
+                const distanceSq = dx * dx + dy * dy;
+                
+                if (distanceSq > 1) {
+                    const distance = Math.sqrt(distanceSq);
+                    const moveSpeed = this.speed * (FOCUS_ACTIVE ? 1 : 1.2);
+                    const ratio = moveSpeed / distance;
+                    
+                    this.velocity.x = dx * ratio;
+                    this.velocity.y = dy * ratio;
+                    
+                    this.pos.x += this.velocity.x;
+                    this.pos.y += this.velocity.y;
+                } else {
+                    this.velocity.x *= 0.9;
+                    this.velocity.y *= 0.9;
+                }
+                
+                // Boundary check
+                this.pos.x = Math.max(20, Math.min(WIDTH - 20, this.pos.x));
+                this.pos.y = Math.max(20, Math.min(HEIGHT - 150, this.pos.y));
+                
+                // Calculate rotation for visual
+                this.rotation += this.velocity.x * 0.02;
+            }
+            
+            fixedUpdateAttack() {
+                if (this.bombActive) return;
+                
+                this.attackTimer++;
+                
+                // Faster attack rate as power increases - ENHANCED
+                let attackInterval = 5;
+                if (this.power < 4) attackInterval = 8 - this.power * 0.5;
+                else if (this.power < 8) attackInterval = 4;
+                else if (this.power < 12) attackInterval = 3;
+                else if (this.power < 16) attackInterval = 2.5;
+                else if (this.power < 20) attackInterval = 2;
+                else attackInterval = 1.5;
+                
+                if (this.attackTimer >= attackInterval) {
+                    this.attackTimer = 0;
+                    this.shoot();
+                }
+            }
+            
+            shoot() {
+                const angleToBoss = Math.atan2(boss.pos.y - this.pos.y, boss.pos.x - this.pos.x);
+                
+                if (this.power < 4) {
+                    // Single bullet
+                    this.createBullet(angleToBoss, 15, '#ffaa00', 6);
+                } else if (this.power < 8) {
+                    // 3-bullet spread
+                    for (let i = -1; i <= 1; i++) {
+                        this.createBullet(angleToBoss + i * 0.18, 13, '#00ff88', 5);
+                    }
+                } else if (this.power < 12) {
+                    // 5-bullet spread
+                    for (let i = -2; i <= 2; i++) {
+                        this.createBullet(angleToBoss + i * 0.14, 11, '#0088ff', 4);
+                    }
+                } else if (this.power < 16) {
+                    // 5-bullet spread + 2 sides
+                    for (let i = -2; i <= 2; i++) {
+                        this.createBullet(angleToBoss + i * 0.11, 10, '#00ffff', 4);
+                    }
+                    this.createBullet(angleToBoss - Math.PI/3, 9, '#ff8800', 3);
+                    this.createBullet(angleToBoss + Math.PI/3, 9, '#ff8800', 3);
+                } else if (this.power < 20) {
+                    // 7-bullet spread
+                    for (let i = -3; i <= 3; i++) {
+                        this.createBullet(angleToBoss + i * 0.1, 9, '#ff00ff', 4);
+                    }
+                } else {
+                    // Full power: 9 bullets with homing
+                    for (let i = -4; i <= 4; i++) {
+                        const bullet = getBulletFromPool(
+                            this.pos.x, this.pos.y,
+                            angleToBoss + i * 0.08, 8, 'player',
+                            { color: '#ffffff', size: 4, homing: true }
+                        );
+                        bullets.push(bullet);
+                    }
+                }
+                
+                // Spawn items more frequently at higher power - ENHANCED
+                if (Math.random() < 0.015 + this.power * 0.002 && items.length < CONFIG.performance.maxItems) {
+                    items.push(getItemFromPool(this.pos.x, this.pos.y, 1 + Math.floor(this.power / 6)));
+                }
+            }
+            
+            createBullet(angle, speed, color, size) {
+                bullets.push(getBulletFromPool(
+                    this.pos.x, this.pos.y,
+                    angle, speed, 'player',
+                    { color: color, size: size }
+                ));
+            }
+            
+            fixedUpdateAutoBomb() {
+                if (this.autoBombCooldown > 0 || this.bombs === 0 || this.bombActive) return;
+                
+                let imminentDanger = false;
+                for (const bullet of bullets) {
+                    if (bullet.type !== 'boss') continue;
+                    
+                    const dx = bullet.pos.x - this.pos.x;
+                    const dy = bullet.pos.y - this.pos.y;
+                    const distSq = dx * dx + dy * dy;
+                    
+                    if (distSq < 2500) {
+                        const dist = Math.sqrt(distSq);
+                        const timeToHit = dist / bullet.vel.mag();
+                        
+                        if (timeToHit < 18 && this.dangerLevel > 0.8) {
+                            imminentDanger = true;
+                            break;
+                        }
+                    }
+                }
+                
+                for (const blaster of blasters) {
+                    if (blaster.state === 'fire') {
+                        const dx = this.pos.x - blaster.pos.x;
+                        const dy = this.pos.y - blaster.pos.y;
+                        const rot = -(blaster.angle + Math.PI / 2);
+                        const cos = Math.cos(rot);
+                        const sin = Math.sin(rot);
+                        const localX = dx * cos - dy * sin;
+                        const localY = dx * sin + dy * cos;
+                        
+                        if (localY > 10 && localY < blaster.beamLength && 
+                            Math.abs(localX) < blaster.beamWidth/2 + this.hitboxRadius) {
+                            imminentDanger = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (imminentDanger && this.dangerLevel > CONFIG.player.autoBombThreshold) {
+                    this.autoBomb();
+                }
+            }
+            
+            fixedUpdateDangerLevel() {
+                let dangerScore = 0;
+                const maxDangerScore = 50;
+                
+                for (const bullet of bullets) {
+                    if (bullet.type !== 'boss') continue;
+                    
+                    const dx = bullet.pos.x - this.pos.x;
+                    const dy = bullet.pos.y - this.pos.y;
+                    const distSq = dx * dx + dy * dy;
+                    
+                    if (distSq < 40000) {
+                        const dist = Math.sqrt(distSq);
+                        const relativeSpeed = bullet.vel.mag();
+                        const timeToImpact = dist / (relativeSpeed + 0.1);
+                        
+                        const bulletDir = Math.atan2(bullet.vel.y, bullet.vel.x);
+                        const toPlayerDir = Math.atan2(dy, dx);
+                        const angleDiff = Math.abs(bulletDir - toPlayerDir);
+                        const directionMatch = Math.cos(angleDiff);
+                        
+                        if (directionMatch > 0.7 && timeToImpact < 60) {
+                            dangerScore += (200 - dist) / 200 * (1 / (timeToImpact + 1));
+                        }
+                    }
+                }
+                
+                for (const devourer of gasterDevourers) {
+                    const dist = this.pos.dist(devourer.pos);
+                    if (dist < 300) {
+                        dangerScore += (300 - dist) / 300;
+                    }
+                }
+                
+                this.dangerLevel = Math.min(1, dangerScore / maxDangerScore);
+                
+                if (this.dangerLevel > 0.7) {
+                    document.getElementById('btn-bomb').style.boxShadow = 
+                        `0 0 20px rgba(255, ${Math.floor(100 * this.dangerLevel)}, 0, 0.8)`;
+                } else {
+                    document.getElementById('btn-bomb').style.boxShadow = '';
+                }
+            }
+            
+            autoBomb() {
+                if (this.bombs > 0 && !this.bombActive && this.autoBombCooldown === 0) {
+                    this.autoBombCooldown = 300;
+                    this.useBomb();
+                    
+                    const indicator = document.getElementById('auto-bomb-indicator');
+                    indicator.style.opacity = '1';
+                    setTimeout(() => {
+                        indicator.style.opacity = '0';
+                    }, 1000);
+                }
+            }
+            
+            onHit() {
+                if (this.hitThisFrame || this.invulFrames > 0) return;
+                this.hitThisFrame = true;
+                
+                if (this.deathTimer > 0 && this.bombs > 0) {
+                    this.deathbomb();
+                    return;
+                }
+                
+                this.lives--;
+                this.invulFrames = CONFIG.player.invulTime;
+                this.deathTimer = CONFIG.player.deathbombWindow;
+                
+                const powerLoss = Math.min(this.power * 0.3, CONFIG.player.powerLossOnDeath * (this.power / 4));
+                this.power = Math.max(CONFIG.player.powerStart, this.power - powerLoss);
+                
+                const hitEffect = document.getElementById('hit-effect');
+                hitEffect.style.display = 'block';
+                setTimeout(() => {
+                    hitEffect.style.display = 'none';
+                }, 100);
+                
+                SHAKE_INTENSITY = 0;
+                
+                this.updateUI();
+                
+                if (this.lives <= 0) {
+                    setTimeout(() => endGame(false), 500);
+                }
+            }
+            
+            deathbomb() {
+                if (this.bombs === 0) return;
+                
+                this.bombs--;
+                this.bombActive = true;
+                this.bombTimer = 150;
+                this.invulFrames = 80;
+                this.autoBombCooldown = 180;
+                
+                let cleared = 0;
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    if (bullets[i].type === 'boss') {
+                        const distSq = bullets[i].pos.distSq(this.pos);
+                        if (distSq < 122500) {
+                            returnBulletToPool(bullets[i]);
+                            bullets.splice(i, 1);
+                            cleared++;
+                        }
+                    }
+                }
+                
+                blasters = [];
+                gasterDevourers = [];
+                
+                // Enhanced visual feedback - IMPROVED
+                createExplosion(this.pos.x, this.pos.y, 40, '#ffff00');
+                ParticleEffect.createWave(this.pos.x, this.pos.y, 16, '#ffff00', 6);
+                SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 15);
+                
+                const deathbombText = document.getElementById('deathbomb-text');
+                deathbombText.style.display = 'block';
+                deathbombText.innerText = `DEATHBOMB! (${cleared} bullets cleared)`;
+                setTimeout(() => {
+                    deathbombText.style.display = 'none';
+                }, 1200);
+                
+                // Increased deathbomb bonus points
+                addScore(15000 + cleared * 100);
+                
+                showStatus("DEATHBOMB! - Area cleared");
+            }
+            
+            useBomb() {
+                if (this.bombs > 0 && !this.bombActive && BOMB_COOLDOWN === 0) {
+                    this.bombs--;
+                    this.bombActive = true;
+                    this.bombTimer = 100;
+                    this.invulFrames = 60;
+                    BOMB_COOLDOWN = 30;
+                    
+                    let cleared = 0;
+                    for (let i = bullets.length - 1; i >= 0; i--) {
+                        if (bullets[i].type === 'boss') {
+                            const distSq = bullets[i].pos.distSq(this.pos);
+                            if (distSq < 62500) {
+                                returnBulletToPool(bullets[i]);
+                                bullets.splice(i, 1);
+                                cleared++;
+                            }
+                        }
+                    }
+                    
+                    boss.takeDamage(5000);
+                    
+                    createExplosion(this.pos.x, this.pos.y, 30, '#ffaa00');
+                    ParticleEffect.createWave(this.pos.x, this.pos.y, 12, '#ff6600', 5);
+                    SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 12);
+                    
+                    // Add bonus points for cleared bullets
+                    addScore(cleared * 100);
+                    
+                    showStatus(`BOMB! - ${cleared} bullets cleared`);
+                }
+            }
+            
+            graze(bullet) {
+                if (!this.grazedBullets.has(bullet.id)) {
+                    this.grazedBullets.add(bullet.id);
+                    this.grazeCount++;
+                    
+                    // Enhanced graze rewards - IMPROVED
+                    this.power = Math.min(this.powerMax, this.power + CONFIG.player.powerGainPerGraze * 1.5);
+                    
+                    const grazeScore = CONFIG.scoring.grazePoints * (1 + this.power / 6);
+                    addScore(grazeScore);
+                    
+                    // Visual feedback for graze
+                    ParticleEffect.createBurst(bullet.pos.x, bullet.pos.y, 4, '#00ffff', 1.5);
+                    
+                    if (Math.random() < 0.05 + this.power * 0.001 && items.length < CONFIG.performance.maxItems) {
+                        items.push(getItemFromPool(bullet.pos.x, bullet.pos.y, 1));
+                    }
+                    
+                    if (this.grazedBullets.size > 1000) {
+                        const values = Array.from(this.grazedBullets);
+                        this.grazedBullets = new Set(values.slice(500));
+                    }
+                }
+            }
+            
+            collectItem(item) {
+                POINT_ITEMS += item.value;
+                
+                const powerGain = CONFIG.player.powerGainPerItem * item.value * (1 + this.power / 24);
+                this.power = Math.min(this.powerMax, this.power + powerGain);
+                
+                const itemScore = CONFIG.scoring.pointItemValue * item.value * (1 + this.power / 12);
+                addScore(itemScore);
+                
+                COMBO_COUNT++;
+                COMBO_TIMER = 180;
+                
+                returnItemToPool(item);
+            }
+            
+            updateUI() {
+                document.getElementById('life-value').innerText = this.lives;
+                document.getElementById('bomb-value').innerText = this.bombs;
+                document.getElementById('power-value').innerText = this.power.toFixed(2);
+                document.getElementById('graze-value').innerText = this.grazeCount;
+                
+                const bombBtn = document.getElementById('btn-bomb');
+                if (BOMB_COOLDOWN > 0 || this.bombs === 0) {
+                    bombBtn.style.opacity = '0.5';
+                } else {
+                    bombBtn.style.opacity = '1';
+                }
+                
+                const focusBtn = document.getElementById('btn-focus');
+                if (FOCUS_ACTIVE) {
+                    focusBtn.classList.add('active');
+                    focusBtn.style.background = 'rgba(0, 100, 255, 0.8)';
+                } else {
+                    focusBtn.classList.remove('active');
+                    focusBtn.style.background = 'rgba(0, 0, 0, 0.7)';
+                }
+            }
+            
+            draw(alpha) {
+                const interpPos = this.pos.interpolated(alpha);
+                
+                CTX.save();
+                CTX.translate(interpPos.x, interpPos.y);
+                
+                // Invulnerability flicker - FIXED LOGIC (frame-based)
+                if (this.invulFrames > 0) {
+                    CTX.globalAlpha = (fixedFrames % 10 < 5) ? 0.4 : 0.8;
+                }
+                
+                // Draw player sprite
+                CTX.rotate(this.rotation * 0.1);
+                
+                // Outer glow - VISUAL ONLY (real time)
+                const visualGlow = Math.sin(performance.now() * 0.001) * 0.5 + 0.5;
+                CTX.shadowBlur = 0 * visualGlow;
+                CTX.shadowColor = this.color;
+                
+                CTX.fillStyle = this.color;
+                CTX.beginPath();
+                CTX.arc(0, 0, this.radius, 0, Math.PI * 2);
+                CTX.fill();
+                
+                CTX.fillStyle = FOCUS_ACTIVE ? '#ffffff' : '#cccccc';
+                CTX.beginPath();
+                CTX.arc(0, 0, this.radius * 0.7, 0, Math.PI * 2);
+                CTX.fill();
+                
+                CTX.fillStyle = FOCUS_ACTIVE ? '#ff5555' : '#ff0000';
+                CTX.beginPath();
+                CTX.ellipse(0, -this.radius * 0.3, this.radius * 0.4, this.radius * 0.2, 0, 0, Math.PI * 2);
+                CTX.fill();
+                
+                CTX.shadowBlur = 0;
+                
+                // Player hitbox (focus mode)
+                if (FOCUS_ACTIVE) {
+                    CTX.save();
+                    CTX.globalAlpha = 0.9;
+                    CTX.shadowBlur = 1;
+                    CTX.shadowColor = 'rgba(0, 255, 255, 0.8)';
+                    CTX.strokeStyle = 'rgba(0, 255, 255, 0.9)';
+                    CTX.lineWidth = 2;
+                    CTX.beginPath();
+                    CTX.arc(0, 0, this.hitboxRadius + 0.5, 0, Math.PI * 2);
+                    CTX.stroke();
+                    CTX.restore();
+
+                    CTX.fillStyle = '#ffffff';
+                    CTX.beginPath();
+                    CTX.arc(0, 0, Math.max(1.8, this.hitboxRadius * 0.25), 0, Math.PI * 2);
+                    CTX.fill();
+
+                    CTX.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+                    CTX.lineWidth = 1;
+                    CTX.beginPath();
+                    CTX.arc(0, 0, this.hitboxRadius + 2, 0, Math.PI * 2);
+                    CTX.stroke();
+
+                    CTX.strokeStyle = 'rgba(0, 255, 255, 0.25)';
+                    CTX.lineWidth = 1;
+                    CTX.beginPath();
+                    CTX.moveTo(-WIDTH, 0);
+                    CTX.lineTo(WIDTH, 0);
+                    CTX.moveTo(0, -HEIGHT);
+                    CTX.lineTo(0, HEIGHT);
+                    CTX.stroke();
+                }
+                
+                // Bomb active effect
+                if (this.bombActive) {
+                    CTX.globalAlpha = 0.3;
+                    CTX.fillStyle = '#ffaa00';
+                    CTX.beginPath();
+                    CTX.arc(0, 0, this.radius * 2, 0, Math.PI * 2);
+                    CTX.fill();
+                }
+                
+                CTX.restore();
+                CTX.globalAlpha = 1;
+            }
+        }
+        
+        // === HYBRID GAME LOOP ===
+        function gameLoop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            
+            let delta = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            // Chặn spike
+            if (delta > 250) delta = 250;
+            
+            accumulator += delta;
+            
+            // FIXED LOGIC UPDATE (60FPS)
+            while (accumulator >= FIXED_DT) {
+                fixedUpdate();
+                accumulator -= FIXED_DT;
+            }
+            
+            // Tính interpolation factor
+            alpha = accumulator / FIXED_DT;
+            
+            // RENDER (với interpolation)
+            render(alpha);
+            
+            // Update particles với delta time (visual only)
+            updateParticles(delta / 16.67); // Chuẩn hóa về 60FPS
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function fixedUpdate() {
+            if (!GAME_RUNNING) return;
+            
+            fixedFrames++;
+            
+            // Decay screen shake - FIXED LOGIC
+            SHAKE_INTENSITY = Math.max(0, SHAKE_INTENSITY - 0.85);
+            
+            // Update cooldowns - FIXED LOGIC
+            BOMB_COOLDOWN = Math.max(0, BOMB_COOLDOWN - 1);
+            
+            // Update entities - FIXED LOGIC
+            boss.fixedUpdate();
+            player.fixedUpdate();
+            
+            // Update bullets - FIXED LOGIC
+            BULLET_COUNT = 0;
+            const playerHitRadiusSq = player.hitboxRadius * player.hitboxRadius;
+            const bossRadiusSq = boss.radius * boss.radius;
+            
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                if (!bullet.fixedUpdate()) {
+                    returnBulletToPool(bullet);
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                BULLET_COUNT++;
+                
+                // Player bullet hitting boss - FIXED LOGIC
+                if (bullet.type === 'player' && !player.bombActive) {
+                    const dx = bullet.pos.x - boss.pos.x;
+                    const dy = bullet.pos.y - boss.pos.y;
+                    const distSq = dx * dx + dy * dy;
+                    
+                    if (distSq < bossRadiusSq + bullet.radius * bullet.radius) {
+                        const damage = 100 * (1 + player.power / 8);
+                        boss.takeDamage(damage);
+                            createExplosion(bullet.pos.x, bullet.pos.y, 2.5, bullet.color);
+                            ParticleEffect.createBurst(bullet.pos.x, bullet.pos.y, 6, bullet.color, 2);
+                            SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 2);
+                        COMBO_TIMER = 180;
+                        continue;
+                    }
+                    
+                    // Hit orbs - FIXED LOGIC
+                    for (let j = boss.orbs.length - 1; j >= 0; j--) {
+                        const orb = boss.orbs[j];
+                        const dxo = bullet.pos.x - orb.x;
+                        const dyo = bullet.pos.y - orb.y;
+                        if (dxo * dxo + dyo * dyo < 225) {
+                            boss.orbs.splice(j, 1);
+                            createExplosion(orb.x, orb.y, 5, orb.color);
+                            returnBulletToPool(bullet);
+                            bullets.splice(i, 1);
+                            addScore(1000);
+                            break;
+                        }
+                    }
+                }
+                
+                // Boss bullet hitting player - FIXED LOGIC
+                if (bullet.type === 'boss' && fixedFrames - bullet.spawnFrame > 3 && 
+                    !bullet.hasHitPlayer && player.invulFrames <= 0 && !player.bombActive) {
+                    const dx = bullet.pos.x - player.pos.x;
+                    const dy = bullet.pos.y - player.pos.y;
+                    const distSq = dx * dx + dy * dy;
+                    const collisionDist = player.hitboxRadius + bullet.radius;
+                    const collisionDistSq = collisionDist * collisionDist;
+                    
+                    if (distSq < collisionDistSq) {
+                        player.onHit();
+                        ParticleEffect.createBurst(player.pos.x, player.pos.y, 10, '#ff4444', 4);
+                        SHAKE_INTENSITY = Math.max(SHAKE_INTENSITY, 8);
+                        bullet.hasHitPlayer = true;
+                        createExplosion(bullet.pos.x, bullet.pos.y, 3, bullet.color);
+                        returnBulletToPool(bullet);
+                        bullets.splice(i, 1);
+                        continue;
+                    }
+                }
+            }
+            
+            // Update items - FIXED LOGIC
+            for (let i = items.length - 1; i >= 0; i--) {
+                if (!items[i].fixedUpdate()) {
+                    returnItemToPool(items[i]);
+                    items.splice(i, 1);
+                }
+            }
+            
+            // Enforce limits - FIXED LOGIC
+            if (items.length > CONFIG.performance.maxItems) {
+                const toRemove = items.length - CONFIG.performance.maxItems;
+                for (let i = 0; i < toRemove; i++) {
+                    returnItemToPool(items[i]);
+                }
+                items = items.slice(toRemove);
+            }
+            
+            // Update combo - FIXED LOGIC
+            if (COMBO_TIMER > 0) {
+                COMBO_TIMER--;
+            } else if (COMBO_COUNT > 0) {
+                COMBO_COUNT = 0;
+            }
+            
+            // Performance culling - FIXED LOGIC
+            if (bullets.length > CONFIG.performance.maxBullets) {
+                const toRemove = bullets.length - CONFIG.performance.maxBullets;
+                for (let i = 0; i < toRemove; i++) {
+                    returnBulletToPool(bullets[i]);
+                }
+                bullets = bullets.slice(toRemove);
+            }
+            
+            // Update UI periodically
+            if (fixedFrames % 15 === 0) {
+                updateUI();
+                updateSpellUI();
+            }
+            
+            // Screen shake decay - FIXED LOGIC
+            SHAKE_INTENSITY = Math.max(0, SHAKE_INTENSITY - 1);
+        }
+        
+        function updateParticles(deltaFactor) {
+            PARTICLE_COUNT = 0;
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (!particles[i].updateVisual(deltaFactor)) {
+                    returnParticleToPool(particles[i]);
+                    particles.splice(i, 1);
+                    continue;
+                }
+                PARTICLE_COUNT++;
+            }
+            
+            if (particles.length > CONFIG.performance.maxParticles) {
+                const toRemove = particles.length - CONFIG.performance.maxParticles;
+                for (let i = 0; i < toRemove; i++) {
+                    returnParticleToPool(particles[i]);
+                }
+                particles = particles.slice(toRemove);
+            }
+        }
+        
+        function render(alpha) {
+            // Clear canvas
+            CTX.fillStyle = '#050505';
+            CTX.fillRect(0, 0, WIDTH, HEIGHT);
+            
+            // Apply screen shake with multiplier (VISUAL ONLY)
+            if (SHAKE_INTENSITY > 0) {
+                CTX.save();
+                const shakeAmount = SHAKE_INTENSITY * CONFIG.visual.screenShakeMultiplier;
+                const dx = (Math.random() - 0.5) * shakeAmount;
+                const dy = (Math.random() - 0.5) * shakeAmount;
+                CTX.translate(dx, dy);
+            }
+            
+            // Apply hit flash effect
+            if (player.hitThisFrame && GAME_RUNNING) {
+                CTX.save();
+                CTX.globalAlpha = CONFIG.visual.hitFlashAlpha;
+                CTX.fillStyle = '#ff4444';
+                CTX.fillRect(0, 0, WIDTH, HEIGHT);
+                CTX.restore();
+            }
+            
+            // Draw game entities with interpolation
+            boss.draw(alpha);
+            
+            // Draw bullets with interpolation
+            bullets.forEach(b => b.draw(alpha));
+            
+            // Draw items with interpolation
+            items.forEach(i => i.draw(alpha));
+            
+            // Draw particles (no interpolation needed)
+            particles.forEach(p => p.draw(alpha));
+            
+            // Draw special attacks with interpolation
+            blasters.forEach(b => b.draw(alpha));
+            gasterDevourers.forEach(d => d.draw(alpha));
+            
+            // Draw player with interpolation
+            player.draw(alpha);
+            
+            // Draw combo text enhancement
+            if (COMBO_COUNT > 0 && COMBO_TIMER > 0) {
+                CTX.save();
+                CTX.font = `bold ${24 * CONFIG.visual.comboTextScale}px Arial`;
+                CTX.fillStyle = `rgba(255, 150, 0, ${COMBO_TIMER / 180})`;
+                CTX.textAlign = 'center';
+                CTX.textBaseline = 'middle';
+                const scale = 1 + (1 - COMBO_TIMER / 180) * 0.3;
+                CTX.globalAlpha = COMBO_TIMER / 180;
+                CTX.transform(scale, 0, 0, scale, WIDTH / 2, HEIGHT * 0.3);
+                CTX.fillText(`COMBO x${COMBO_COUNT}`, 0, 0);
+                CTX.restore();
+            }
+            
+            // Restore context after shake
+            if (SHAKE_INTENSITY > 0) {
+                CTX.restore();
+            }
+            
+            // Performance monitoring
+            monitorPerformance();
+        }
+        
+        // === GAME FUNCTIONS ===
+        function resize() {
+            WIDTH = window.innerWidth;
+            HEIGHT = window.innerHeight;
+            
+            CANVAS.width = WIDTH;
+            CANVAS.height = HEIGHT;
+            
+            const isSmallScreen = WIDTH < 400 || HEIGHT < 600;
+            if (isSmallScreen) {
+                document.querySelector('.spell-container').style.top = '70px';
+                document.querySelector('.spell-name').style.fontSize = '14px';
+                document.querySelector('.touch-btn').style.width = '60px';
+                document.querySelector('.touch-btn').style.height = '60px';
+            }
+        }
+        
+        function init() {
+            resize();
+            
+            // Initialize pools
+            initBulletPool();
+            
+            // Create game entities
+            player = new Player();
+            boss = new Boss();
+            
+            // Clear arrays
+            bullets = [];
+            particles = [];
+            items = [];
+            blasters = [];
+            gasterDevourers = [];
+            
+            // Reset game state
+            SCORE = 0;
+            GRAZE_COUNT = 0;
+            COMBO_COUNT = 0;
+            COMBO_TIMER = 0;
+            POINT_ITEMS = 0;
+            SPELL_BONUS = 1.0;
+            fixedFrames = 0;
+            GAME_RUNNING = true;
+            
+            // Reset config
+            CONFIG.boss.maxHpPerSpell = 150000;
+            
+            // Reset timing variables
+            accumulator = 0;
+            lastTime = 0;
+            alpha = 0;
+            
+            // Update UI
+            updateUI();
+            updateSpellUI();
+            
+            // Preload devourer sprite
+            if (typeof GasterDevourer !== 'undefined') {
+                GasterDevourer._prepareSprite();
+            }
+        }
+        
+        function startGame() {
+            document.getElementById('overlay').classList.add('hidden');
+            
+            IS_TOUCHING = false;
+            MULTI_TOUCH = false;
+            
+            init();
+            
+            // Start hybrid game loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function endGame(win) {
+            GAME_RUNNING = false;
+            
+            const overlay = document.getElementById('overlay');
+            overlay.classList.remove('hidden');
+            
+            const title = overlay.querySelector('h1');
+            const subtitle = overlay.querySelector('.subtitle');
+            
+            if (win) {
+                title.innerText = "VICTORY!";
+                title.style.color = "gold";
+                subtitle.innerHTML = `
+                    <b>Spell Cards Captured: ${boss.currentSpell-1}</b><br>
+                    Final Score: ${SCORE.toLocaleString()}<br>
+                    Max Power: ${player.power.toFixed(2)}<br>
+                    Graze: ${player.grazeCount}
+                `;
+            } else {
+                title.innerText = "GAME OVER";
+                title.style.color = "red";
+                subtitle.innerHTML = `
+                    <b>Reached Spell: ${boss.currentSpell}</b><br>
+                    Final Score: ${SCORE.toLocaleString()}<br>
+                    Max Power: ${player.power.toFixed(2)}<br>
+                    Graze: ${player.grazeCount}
+                `;
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('score-value').innerText = SCORE.toLocaleString();
+            
+            // Enhanced combo display with multiplier info
+            const comboText = COMBO_COUNT > 0 
+                ? `Combo: ${COMBO_COUNT} x${(1 + COMBO_COUNT * 0.02).toFixed(2)}` 
+                : 'Combo: 0';
+            document.getElementById('combo-value').innerText = comboText;
+            
+            if (player) {
+                player.updateUI();
+            }
+        }
+        
+        function updateSpellUI() {
+            if (!boss) return;
+            
+            const hpPct = (boss.spellHp / boss.spellMaxHp) * 100;
+            document.getElementById('spell-hp-bar').style.width = hpPct + "%";
+            document.getElementById('spell-hp-val').innerText = Math.floor(boss.spellHp).toLocaleString();
+            document.getElementById('spell-hp-max').innerText = Math.floor(boss.spellMaxHp).toLocaleString();
+            document.getElementById('spell-name').innerText = boss.spellName;
+            document.getElementById('spell-stack').innerText = `No. ${boss.currentSpell}`;
+            
+            const timeLeft = Math.max(0, (boss.spellDuration - boss.spellTimer) / 60);
+            document.getElementById('spell-timer').innerText = `Time: ${timeLeft.toFixed(2)}`;
+            
+            const spellPct = (boss.spellTimer / boss.spellDuration) * 100;
+            document.getElementById('spell-indicator').style.width = spellPct + "%";
+        }
+        
+        // === UTILITY FUNCTIONS ===
+        function createExplosion(x, y, count, color) {
+            const actualCount = Math.min(count * CONFIG.visual.particleIntensity, 20);
+            for (let i = 0; i < actualCount; i++) {
+                const angle = (i / actualCount) * Math.PI * 2;
+                const particle = getParticleFromPool(x, y, color);
+                const speed = 2 + Math.random() * 2;
+                particle.vel.set(
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed
+                );
+                particles.push(particle);
+            }
+        }
+        
+        function showStatus(text) {
+            const el = document.getElementById('spell-status');
+            el.innerText = text;
+            el.style.opacity = 1;
+            setTimeout(() => el.style.opacity = 0, 2000);
+        }
+        
+        function addScore(amount) {
+            const comboBonus = 1 + (COMBO_COUNT * 0.02);
+            const powerBonus = 1 + (player.power * CONFIG.scoring.powerBonusMultiplier / 24);
+            SCORE += Math.floor(amount * comboBonus * powerBonus * SPELL_BONUS);
+        }
+        
+        function createTouchFeedback(x, y) {
+            const feedback = document.getElementById('touch-feedback');
+            feedback.style.left = x + 'px';
+            feedback.style.top = y + 'px';
+            feedback.className = 'touch-feedback';
+            
+            setTimeout(() => {
+                feedback.className = '';
+            }, 300);
+        }
+        
+        // === PERFORMANCE MONITORING ===
+        function monitorPerformance() {
+            const now = performance.now();
+            if (now - LAST_FPS_UPDATE > 1000) {
+                FPS = Math.round(1000 / (now - LAST_FPS_UPDATE));
+                LAST_FPS_UPDATE = now;
+                
+                const warning = document.getElementById('performance-warning');
+                if (FPS < 45) {
+                    warning.innerText = `PERF: ${FPS}FPS (${BULLET_COUNT} bullets, ${items.length} items)`;
+                    warning.style.opacity = '1';
+                } else if (FPS < 55) {
+                    warning.innerText = `${FPS}FPS`;
+                    warning.style.opacity = '0.5';
+                } else {
+                    warning.style.opacity = '0';
+                }
+            }
+        }
+        
+        // === POOL FUNCTIONS ===
+        function initBulletPool() {
+            if (CONFIG.performance.enableBulletPool) {
+                bulletPool = [];
+                for (let i = 0; i < CONFIG.performance.bulletPoolSize; i++) {
+                    bulletPool.push(new Bullet(0, 0, 0, 0, 'pool', {}));
+                }
+                
+                itemPool = [];
+                for (let i = 0; i < 50; i++) {
+                    itemPool.push(new PointItem(0, 0, 1));
+                }
+                
+                particlePool = [];
+                for (let i = 0; i < 200; i++) {
+                    particlePool.push(new Particle(0, 0, '#ffffff'));
+                }
+            }
+        }
+        
+        function getBulletFromPool(x, y, angle, speed, type, props) {
+            if (CONFIG.performance.enableBulletPool && bulletPool.length > 0) {
+                const bullet = bulletPool.pop();
+                bullet.reset(x, y, angle, speed, type, props);
+                return bullet;
+            }
+            return new Bullet(x, y, angle, speed, type, props);
+        }
+        
+        function returnBulletToPool(bullet) {
+            if (CONFIG.performance.enableBulletPool && bulletPool.length < CONFIG.performance.bulletPoolSize) {
+                bullet.active = false;
+                bulletPool.push(bullet);
+            }
+        }
+        
+        function getItemFromPool(x, y, value) {
+            if (CONFIG.performance.enableBulletPool && itemPool.length > 0) {
+                const item = itemPool.pop();
+                item.reset(x, y, value);
+                return item;
+            }
+            return new PointItem(x, y, value);
+        }
+        
+        function returnItemToPool(item) {
+            if (CONFIG.performance.enableBulletPool && itemPool.length < 50) {
+                item.active = false;
+                item.collected = false;
+                itemPool.push(item);
+            }
+        }
+        
+        function getParticleFromPool(x, y, color) {
+            if (CONFIG.performance.enableBulletPool && particlePool.length > 0) {
+                const particle = particlePool.pop();
+                particle.reset(x, y, color);
+                return particle;
+            }
+            return new Particle(x, y, color);
+        }
+        
+        function returnParticleToPool(particle) {
+            if (CONFIG.performance.enableBulletPool && particlePool.length < 200) {
+                particle.active = false;
+                particlePool.push(particle);
+            }
+        }
+        
+        // === EVENT LISTENERS ===
+        window.addEventListener('resize', resize);
+        window.addEventListener('load', () => {
+            resize();
+            if (typeof GasterDevourer !== 'undefined') {
+                GasterDevourer._prepareSprite();
+            }
+        });
+        
+        const moveArea = document.getElementById('move-area');
+        const focusBtn = document.getElementById('btn-focus');
+        const bombBtn = document.getElementById('btn-bomb');
+        
+        moveArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            IS_TOUCHING = true;
+            MULTI_TOUCH = e.touches.length > 1;
+            
+            const touch = e.touches[0];
+            const rect = CANVAS.getBoundingClientRect();
+            TOUCH_POS.x = touch.clientX - rect.left;
+            TOUCH_POS.y = touch.clientY - rect.top;
+            
+            player.moveTarget.set(TOUCH_POS.x, TOUCH_POS.y);
+            createTouchFeedback(TOUCH_POS.x, TOUCH_POS.y);
+            
+            LAST_TOUCH_TIME = Date.now();
+        }, { passive: false });
+        
+        moveArea.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!IS_TOUCHING) return;
+            
+            MULTI_TOUCH = e.touches.length > 1;
+            const touch = e.touches[0];
+            const rect = CANVAS.getBoundingClientRect();
+            TOUCH_POS.x = touch.clientX - rect.left;
+            TOUCH_POS.y = touch.clientY - rect.top;
+            
+            player.moveTarget.set(TOUCH_POS.x, TOUCH_POS.y);
+        }, { passive: false });
+        
+        moveArea.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            IS_TOUCHING = false;
+            MULTI_TOUCH = e.touches.length > 1;
+            
+            if (Date.now() - LAST_TOUCH_TIME < 200 && e.touches.length === 0) {
+                focusBtn.classList.toggle('active');
+            }
+        }, { passive: false });
+        
+        focusBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            focusBtn.classList.add('active');
+        }, { passive: false });
+        
+        focusBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+        
+        bombBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (BOMB_COOLDOWN === 0 && player.bombs > 0) {
+                player.useBomb();
+                bombBtn.style.transform = 'scale(0.9)';
+            }
+        }, { passive: false });
+        
+        bombBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            bombBtn.style.transform = 'scale(1)';
+        }, { passive: false });
+        
+        moveArea.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            IS_TOUCHING = true;
+            const rect = CANVAS.getBoundingClientRect();
+            TOUCH_POS.x = e.clientX - rect.left;
+            TOUCH_POS.y = e.clientY - rect.top;
+            player.moveTarget.set(TOUCH_POS.x, TOUCH_POS.y);
+            createTouchFeedback(TOUCH_POS.x, TOUCH_POS.y);
+        });
+        
+        moveArea.addEventListener('mousemove', (e) => {
+            if (!IS_TOUCHING) return;
+            const rect = CANVAS.getBoundingClientRect();
+            TOUCH_POS.x = e.clientX - rect.left;
+            TOUCH_POS.y = e.clientY - rect.top;
+            player.moveTarget.set(TOUCH_POS.x, TOUCH_POS.y);
+        });
+        
+        moveArea.addEventListener('mouseup', () => {
+            IS_TOUCHING = false;
+        });
+        
+        moveArea.addEventListener('mouseleave', () => {
+            IS_TOUCHING = false;
+        });
+        
+        window.addEventListener('keydown', (e) => {
+            if (!GAME_RUNNING) return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'f':
+                    focusBtn.classList.toggle('active');
+                    break;
+                case 'b':
+                case ' ':
+                    if (player.bombs > 0) player.useBomb();
+                    break;
+                case 'r':
+                    if (!GAME_RUNNING) startGame();
+                    break;
+            }
+        });
+        
+        if (CONFIG.player.shakeToBomb && 'DeviceMotionEvent' in window) {
+            let lastShakeTime = 0;
+            let lastAcceleration = { x: 0, y: 0, z: 0 };
+            
+            window.addEventListener('devicemotion', (e) => {
+                if (!GAME_RUNNING || player.bombs === 0 || BOMB_COOLDOWN > 0) return;
+                
+                const acceleration = e.accelerationIncludingGravity;
+                if (!acceleration) return;
+                
+                const currentTime = Date.now();
+                const timeDiff = currentTime - lastShakeTime;
+                
+                if (timeDiff > 1000) {
+                    const deltaX = Math.abs(acceleration.x - lastAcceleration.x);
+                    const deltaY = Math.abs(acceleration.y - lastAcceleration.y);
+                    const deltaZ = Math.abs(acceleration.z - lastAcceleration.z);
+                    
+                    if (deltaX + deltaY + deltaZ > 30) {
+                        lastShakeTime = currentTime;
+                        player.useBomb();
+                    }
+                }
+                
+                lastAcceleration = {
+                    x: acceleration.x,
+                    y: acceleration.y,
+        }
+    </script>
+</body>
+</html>
